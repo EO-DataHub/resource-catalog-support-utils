@@ -19,3 +19,5 @@ jobs:
       image_tag: ${{ needs.get-version-tag.outputs.tag }}
       aws_role_arn: ${{ vars.AWS_ROLE_ARN }}
       aws_ecr_alias: ${{ vars.AWS_ECR_ALIAS }}
+    permissions:
+      id-token: write
