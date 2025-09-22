@@ -18,7 +18,7 @@ jobs:
     uses: eo-datahub/github-actions/.github/workflows/ecr-publish.yaml@main
     with:
       image_name: ${{ github.event.repository.name }}
-      image_tag: ${{ needs.get-version-tag.outputs.tag }}
+      image_tag: ${{ needs.get-version-tag.outputs.version }}
       aws_role_arn: ${{ vars.AWS_ROLE_ARN }}
       aws_ecr_alias: ${{ vars.AWS_ECR_ALIAS }}
     permissions:
