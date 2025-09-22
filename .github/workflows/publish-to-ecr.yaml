@@ -1,0 +1,26 @@
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+name: Publish to ECR
+
+jobs:
+  get-version-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version tag
+        uses: eo-datahub/github-actions/.github/workflows/get-version-tag.yaml@main
+
+  publish-to-ecr:
+    needs: get-version-tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish to ECR
+        uses: eo-datahub/github-actions/.github/workflows/ecr-publish.yaml@main
+        with:
+          image_name: ${{ github.event.repository.name }}
+          image_tag: ${{ needs.get-version-tag.outputs.tag }}
+          aws_role_arn: ${{ secrets.AWS_ROLE_ARN }}
+          aws_ecr_alias: ${{ secrets.AWS_ECR_ALIAS }}
