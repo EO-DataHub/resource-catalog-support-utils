@@ -11,7 +11,7 @@ jobs:
     name: Get version tag
     uses: eo-datahub/github-actions/.github/workflows/get-version-tag.yaml@main
     with:
-      github_ref: ${{ github.ref_name }}
+      github-ref: ${{ github.ref_name }}
 
   publish-to-ecr:
     needs: get-version-tag
