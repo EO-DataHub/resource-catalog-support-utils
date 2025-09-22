@@ -21,3 +21,4 @@ jobs:
       aws_ecr_alias: ${{ vars.AWS_ECR_ALIAS }}
     permissions:
       id-token: write
+      contents: read
