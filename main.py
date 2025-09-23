@@ -1,12 +1,11 @@
 import os
 import time
 import logging
-from pathlib import Path
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from pydantic import BaseModel, HttpUrl, validator
-from create_qlr.create_qlr import create_qlr
+from create_qlr.create_qlr import create_qlr_from_stac
+from create_qlr.models import STACItem
 
 # Configure logging
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -109,29 +108,24 @@ async def log_requests(request: Request, call_next):
     return response
 
 
-class QLRRequest(BaseModel):
-    url: HttpUrl
-    collection: str
-
-    @validator("collection")
-    def validate_collection(cls, v):
-        if not v or not v.strip():
-            raise ValueError("Collection cannot be empty")
-        return v.strip()
-
-
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "version": "0.1.0"}
 
 
-@app.get("/qlr")
-async def get_qlr(url: str, collection: str):
+@app.post("/qlr")
+async def create_qlr_endpoint(item: STACItem):
+    """
+    Create QLR file from STAC item.
+    """
     try:
-        qlr_xml = create_qlr(str(url), collection)
-        logger.info(f"QLR created successfully for {url} with collection {collection}")
-        output_filename = Path(url).name + ".qlr"
+        # Create QLR using the new function from create_qlr module
+        qlr_xml = create_qlr_from_stac(item)
+
+        # Use item ID for filename
+        output_filename = f"{item.id}.qlr"
+
         return Response(
             content=qlr_xml,
             media_type="application/xml",
