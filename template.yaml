@@ -39,23 +39,21 @@ Resources:
           Properties:
             Path: /{proxy+}
             Method: ANY
+            Cors:
+              AllowMethods: "'*'"
+              AllowHeaders: "'*'"
+              AllowOrigin: "'*'"
+              MaxAge: "'600'"
         ApiGatewayRoot:
           Type: Api
           Properties:
             Path: /
             Method: ANY
-
-  # API Gateway
-  FastAPIApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Sub '${AWS::StackName}-api-${Environment}'
-      StageName: !Ref Environment
-      Cors:
-        AllowMethods: "'*'"
-        AllowHeaders: "'*'"
-        AllowOrigin: "'*'"
-        MaxAge: "'600'"
+            Cors:
+              AllowMethods: "'*'"
+              AllowHeaders: "'*'"
+              AllowOrigin: "'*'"
+              MaxAge: "'600'"
 
 Outputs:
   FastAPIFunction:
