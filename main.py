@@ -27,7 +27,13 @@ ALLOWED_ORIGINS = os.getenv(
 ).split(",")
 
 # Add wildcard pattern for eodatahub.org.uk subdomains
-ALLOWED_ORIGINS.extend(["https://*.eodatahub.org.uk", "https://eodatahub.org.uk"])
+ALLOWED_ORIGINS.extend(
+    [
+        "https://*.eodatahub.org.uk",
+        "https://eodatahub.org.uk",
+        "https://*.eodhrc.sparkgeo.dev",
+    ]
+)
 
 app.add_middleware(
     CORSMiddleware,
