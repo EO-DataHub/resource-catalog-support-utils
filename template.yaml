@@ -39,21 +39,11 @@ Resources:
           Properties:
             Path: /{proxy+}
             Method: ANY
-            Cors:
-              AllowMethods: "'*'"
-              AllowHeaders: "'*'"
-              AllowOrigin: "'*'"
-              MaxAge: "'600'"
         ApiGatewayRoot:
           Type: Api
           Properties:
             Path: /
             Method: ANY
-            Cors:
-              AllowMethods: "'*'"
-              AllowHeaders: "'*'"
-              AllowOrigin: "'*'"
-              MaxAge: "'600'"
 
 Outputs:
   FastAPIFunction:
