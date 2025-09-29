@@ -10,6 +10,7 @@ on:
 env:
   AWS_REGION: eu-west-1
   STACK_NAME: qgis-layer-generator
+  S3_BUCKET: qgis-layer-generator-sam-artifacts
 
 jobs:
   deploy:
@@ -44,7 +45,7 @@ jobs:
           --parameter-overrides Environment=prod \
           --capabilities CAPABILITY_IAM \
           --region ${{ env.AWS_REGION }} \
-          --resolve-s3
+          --s3-bucket ${{ env.S3_BUCKET }}
     
     - name: Get API Gateway URL
       run: |
