@@ -43,7 +43,8 @@ jobs:
           --stack-name ${{ env.STACK_NAME }} \
           --parameter-overrides Environment=prod \
           --capabilities CAPABILITY_IAM \
-          --region ${{ env.AWS_REGION }}
+          --region ${{ env.AWS_REGION }} \
+          --resolve-s3
     
     - name: Get API Gateway URL
       run: |
