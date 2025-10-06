@@ -4,8 +4,8 @@ import logging
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from create_qlr.create_qlr import create_qlr_from_stac
-from create_qlr.models import STACItem
+from create_qlr.create_qlr import create_qlr_from_request
+from create_qlr.models import QLRRequest
 
 # Configure logging
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -113,16 +113,23 @@ async def health_check():
 
 
 @app.post("/qlr")
-async def create_qlr_endpoint(item: STACItem):
+async def create_qlr_endpoint(request: QLRRequest):
     """
-    Create QLR file from STAC item.
+    Create QLR file from QLRRequest with xyzUrl and render information.
+
+    This endpoint now expects the new payload structure:
+    {
+        "item": { /* STAC item object */ },
+        "xyzUrl": "https://titiler.example.com/...",
+        "renderId": "NDVI"
+    }
     """
     try:
-        # Create QLR using the new function from create_qlr module
-        qlr_xml = create_qlr_from_stac(item)
+        # Create QLR using the new simplified function
+        qlr_xml = create_qlr_from_request(request)
 
         # Use item ID for filename
-        output_filename = f"{item.id}.qlr"
+        output_filename = f"{request.item.id}.qlr"
 
         return Response(
             content=qlr_xml,

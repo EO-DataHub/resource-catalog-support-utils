@@ -5,96 +5,100 @@ This module provides functionality to create QLR files from STAC items,
 handling template processing, URL extraction, and XML generation.
 """
 
-from create_qlr.get_template import get_template_path
-from create_qlr.models import STACItem
+import os
+from create_qlr.models import QLRRequest
 from create_qlr.constants import (
-    TITILER_BASE_URL,
     ERROR_MESSAGES,
     SUCCESS_MESSAGES,
-    URL_PATTERNS,
     DEFAULTS,
     LOG_FORMATS,
 )
-import os
 import logging
-from typing import Optional, Dict, Any
-from pathlib import Path
-from urllib.parse import unquote
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
 
-def get_layer_id(url: str) -> str:
+def create_qlr_from_request(request: QLRRequest) -> str:
     """
-    Extract a layer ID from a STAC item URL.
+    Create QLR file from a QLRRequest with xyzUrl and render information.
 
-    This function attempts to extract the item ID from various URL formats,
-    with fallback mechanisms for different URL structures.
+    This function uses the provided xyzUrl directly in the template, eliminating
+    the need for collection-specific URL construction.
 
     Args:
-        url: The STAC item URL to extract the ID from
+        request: A QLRRequest object containing item, xyzUrl, and renderId
 
     Returns:
-        The extracted layer/item ID
+        Complete QLR XML as a string
 
     Raises:
-        ValueError: If the URL is invalid or no ID can be extracted
+        ValueError: If QLR creation fails
     """
-    if not url or not url.strip():
-        raise ValueError(ERROR_MESSAGES["INVALID_URL"])
-
     try:
-        # Decode the URL first (it may be double-encoded)
-        decoded_url = unquote(url.strip())
-
-        # Extract the item ID from the URL path
-        # The URL structure is: .../items/{item_id}
-        if URL_PATTERNS["ITEMS_PATH"] in decoded_url:
-            item_id = (
-                decoded_url.split(URL_PATTERNS["ITEMS_PATH"])[-1]
-                .split(URL_PATTERNS["QUERY_SEPARATOR"])[0]
-                .split(URL_PATTERNS["PARAM_SEPARATOR"])[0]
+        logger.debug(
+            LOG_FORMATS["DEBUG"].format(
+                item_id=request.item.id, collection=request.item.collection
             )
-            if item_id:
-                logger.debug(
-                    SUCCESS_MESSAGES["LAYER_ID_EXTRACTED"].format(layer_id=item_id)
-                )
-                return item_id
+        )
 
-        # Fallback: use the last part of the URL as ID
-        fallback_id = decoded_url.rstrip("/").split("/")[-1]
-        if fallback_id:
-            logger.warning(f"Using fallback ID extraction for URL: {url}")
-            return fallback_id
+        # Get the generic template path directly
+        template_path = os.path.join(
+            os.path.dirname(__file__), "templates", "generic_template.xml"
+        )
 
-        raise ValueError(ERROR_MESSAGES["MISSING_ITEM_ID"].format(url=url))
+        # Extract layer name from STAC item properties
+        layer_name = request.item.id
+        if hasattr(request.item.properties, "title") and request.item.properties.title:
+            layer_name = request.item.properties.title
+        elif hasattr(request.item.properties, "name") and request.item.properties.name:
+            layer_name = request.item.properties.name
 
+        # Generate QLR using the xyzUrl directly
+        qlr_xml = generate_qlr_from_xyz(
+            xyz_url=request.xyzUrl,
+            layer_id=request.item.id,
+            layer_name=layer_name,
+            template_path=template_path,
+        )
+
+        logger.info(
+            SUCCESS_MESSAGES["QLR_CREATED"].format(
+                item_id=request.item.id, collection=request.item.collection
+            )
+        )
+
+        return qlr_xml
+
+    except ValueError:
+        # Re-raise ValueError with original message
+        raise
     except Exception as e:
-        logger.error(f"Failed to extract layer ID from URL {url}: {e}")
-        raise ValueError(ERROR_MESSAGES["MISSING_ITEM_ID"].format(url=url))
+        logger.error(
+            LOG_FORMATS["ERROR"].format(
+                item_id=getattr(request.item, "id", "unknown"), error=str(e)
+            )
+        )
+        raise ValueError(f"Failed to create QLR from request: {str(e)}")
 
 
-def generate_qlr(
-    url: str,
+def generate_qlr_from_xyz(
+    xyz_url: str,
     layer_id: str,
-    layer_name: Optional[str] = None,
-    template_path: Optional[str] = None,
-    stac_item: Optional[Dict[str, Any]] = None,
-    titiler_base_url: Optional[str] = None,
+    layer_name: str,
+    template_path: str,
 ) -> str:
     """
-    Generate QLR XML from metadata and template.
+    Generate QLR XML from xyzUrl and metadata using a template.
 
     This function takes a template file and fills it with the provided parameters
-    to create a complete QLR XML file.
+    to create a complete QLR XML file using the xyzUrl directly.
 
     Args:
-        url: The data source URL
+        xyz_url: The fully constructed XYZ tile service URL
         layer_id: Unique identifier for the layer
         layer_name: Human-readable name for the layer
         template_path: Path to the QLR template file
-        stac_item: Dictionary containing STAC item metadata
-        titiler_base_url: Base URL for the Titiler service
 
     Returns:
         Complete QLR XML as a string
@@ -106,67 +110,36 @@ def generate_qlr(
     if not template_path:
         raise ValueError("Template path is required")
 
-    if not Path(template_path).exists():
+    if not os.path.exists(template_path):
         raise ValueError(
-            ERROR_MESSAGES["TEMPLATE_NOT_FOUND"].format(collection="unknown")
+            ERROR_MESSAGES["TEMPLATE_NOT_FOUND"].format(collection="default")
         )
 
-    if layer_name is None:
-        layer_name = os.path.basename(url) or DEFAULTS["LAYER_NAME_FALLBACK"]
+    if not layer_name:
+        layer_name = DEFAULTS["LAYER_NAME_FALLBACK"]
 
     try:
         with open(template_path, "r") as f:
             template = f.read()
 
-        # Base template parameters
+        # Template parameters - selectively encode only the parts that need encoding
+        # Don't encode the entire URL, just the query parameters and placeholders
+        # This matches the working format from normal.qlr
+        url_encoded_xyz_url = (
+            xyz_url.replace("{z}", "%7Bz%7D")
+            .replace("{x}", "%7Bx%7D")
+            .replace("{y}", "%7By%7D")
+            .replace("&", "%26")
+        )
+
         template_params: Dict[str, Any] = {
-            "datasource": url,
+            "xyzUrl": url_encoded_xyz_url,
             "layer_id": layer_id,
             "layer_name": layer_name,
-            "titiler_base_url": titiler_base_url or TITILER_BASE_URL,
         }
 
-        # Add STAC item metadata if available
-        if stac_item:
-            # Add bounding box coordinates
-            if (
-                "bbox" in stac_item
-                and isinstance(stac_item["bbox"], list)
-                and len(stac_item["bbox"]) == 4
-            ):
-                bbox = stac_item["bbox"]
-                template_params.update(
-                    {
-                        "xmin": bbox[0],
-                        "ymin": bbox[1],
-                        "xmax": bbox[2],
-                        "ymax": bbox[3],
-                        "wgs84_xmin": bbox[0],
-                        "wgs84_ymin": bbox[1],
-                        "wgs84_xmax": bbox[2],
-                        "wgs84_ymax": bbox[3],
-                    }
-                )
-            else:
-                logger.warning("Invalid or missing bounding box in STAC item")
-
-            # Add CRS information if available
-            if (
-                "properties" in stac_item
-                and isinstance(stac_item["properties"], dict)
-                and "proj:epsg" in stac_item["properties"]
-            ):
-                epsg_code = stac_item["properties"]["proj:epsg"]
-                template_params.update(
-                    {
-                        "crs_epsg": epsg_code,
-                        "crs_wkt": DEFAULTS["CRS_WKT"],
-                        "crs_proj4": DEFAULTS["CRS_PROJ4"],
-                    }
-                )
-
         qlr_xml = template.format(**template_params)
-        logger.info(f"Successfully generated QLR for {url}")
+        logger.info(f"Successfully generated QLR for {layer_id} using xyzUrl")
         return qlr_xml
 
     except FileNotFoundError:
@@ -183,106 +156,3 @@ def generate_qlr(
         error_msg = ERROR_MESSAGES["QLR_GENERATION_FAILED"]
         logger.error(f"{error_msg}: {e}")
         raise ValueError(f"{error_msg}: {str(e)}")
-
-
-def create_qlr(
-    url: str, collection: str, stac_item: Optional[Dict[str, Any]] = None
-) -> str:
-    """
-    Create QLR file for given URL and collection with proper error handling.
-
-    This is the main function for creating QLR files from STAC items.
-    It validates inputs, retrieves the appropriate template, and generates
-    the complete QLR XML.
-
-    Args:
-        url: The data source URL (typically a STAC item self-link)
-        collection: The collection name (e.g., 'sentinel2_ard')
-        stac_item: Optional dictionary containing STAC item metadata
-
-    Returns:
-        Complete QLR XML as a string
-
-    Raises:
-        ValueError: If inputs are invalid or QLR creation fails
-    """
-    try:
-        # Validate inputs
-        if not url or not url.strip():
-            raise ValueError(ERROR_MESSAGES["INVALID_URL"])
-
-        if not collection or not collection.strip():
-            raise ValueError(ERROR_MESSAGES["INVALID_COLLECTION"])
-
-        # Get template path
-        template_path = get_template_path(collection.strip())
-
-        # Generate QLR
-        layer_name = get_layer_id(url)
-        qlr = generate_qlr(
-            url=url,
-            layer_name=layer_name,
-            layer_id=layer_name,
-            template_path=template_path,
-            stac_item=stac_item,
-            titiler_base_url=TITILER_BASE_URL,
-        )
-
-        logger.info(f"QLR created successfully for {url} with collection {collection}")
-        return qlr
-
-    except ValueError:
-        # Re-raise ValueError with original message
-        raise
-    except Exception as e:
-        logger.error(f"QLR creation failed: {e}")
-        raise ValueError(f"Unexpected error during QLR creation: {str(e)}")
-
-
-def create_qlr_from_stac(item: STACItem) -> str:
-    """
-    Create QLR file from a validated STAC item.
-
-    This function extracts the self-link from a STAC item and creates
-    a QLR file using the item's metadata and collection information.
-
-    Args:
-        item: A validated STACItem object containing all required metadata
-
-    Returns:
-        Complete QLR XML as a string
-
-    Raises:
-        ValueError: If STAC item is missing required fields or QLR creation fails
-    """
-    try:
-        logger.debug(
-            LOG_FORMATS["DEBUG"].format(item_id=item.id, collection=item.collection)
-        )
-
-        # Find the self link
-        self_link = next((link for link in item.links if link.rel == "self"), None)
-        if not self_link:
-            raise ValueError(ERROR_MESSAGES["MISSING_SELF_LINK"])
-
-        # Create QLR using the generated URL and collection
-        qlr_xml = create_qlr(self_link.href, item.collection, item.dict())
-
-        logger.info(
-            SUCCESS_MESSAGES["QLR_CREATED"].format(
-                item_id=item.id, collection=item.collection
-            )
-        )
-
-        return qlr_xml
-
-    except ValueError:
-        # Re-raise ValueError with original message
-        raise
-    except Exception as e:
-        logger.error(
-            LOG_FORMATS["ERROR"].format(
-                item_id=getattr(item, "id", "unknown"), error=str(e)
-            )
-        )
-        raise ValueError(f"Failed to create QLR from STAC item: {str(e)}")

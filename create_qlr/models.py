@@ -102,40 +102,63 @@ class STACItem(BaseModel):
     tilesUrl: Optional[str] = None
     render: Optional[Dict[str, Any]] = None
 
-    @validator("collection")
-    def validate_collection(cls, v: str) -> str:
+
+class QLRRequest(BaseModel):
+    """
+    Represents a QLR generation request with the new payload structure.
+
+    Attributes:
+        item: The STAC item object
+        xyzUrl: The fully constructed XYZ tile service URL with all render parameters
+        renderId: The ID of the render configuration being used
+    """
+
+    item: STACItem
+    xyzUrl: str
+    renderId: str
+
+    @validator("xyzUrl")
+    def validate_xyz_url(cls, v: str) -> str:
         """
-        Validate that collection is not empty or whitespace-only.
+        Validate that xyzUrl is not empty and appears to be a valid URL.
 
         Args:
-            v: Collection string to validate
+            v: XYZ URL string to validate
 
         Returns:
-            Stripped collection string
+            Validated XYZ URL string
 
         Raises:
-            ValueError: If collection is empty or whitespace-only
+            ValueError: If xyzUrl is empty or doesn't appear to be a valid URL
         """
         if not v or not v.strip():
-            raise ValueError("Collection cannot be empty or whitespace-only")
-        return v.strip()
+            raise ValueError("xyzUrl cannot be empty")
 
-    @validator("bbox")
-    def validate_bbox(cls, v: List[float]) -> List[float]:
+        url = v.strip()
+        if not url.startswith(("http://", "https://")):
+            raise ValueError("xyzUrl must be a valid HTTP/HTTPS URL")
+
+        if "{z}" not in url or "{x}" not in url or "{y}" not in url:
+            raise ValueError(
+                "xyzUrl must contain {z}, {x}, and {y} placeholders for tile coordinates"
+            )
+
+        return url
+
+    @validator("renderId")
+    def validate_render_id(cls, v: str) -> str:
         """
-        Validate that bbox has exactly 4 coordinates.
+        Validate that renderId is not empty.
 
         Args:
-            v: Bounding box coordinates to validate
+            v: Render ID string to validate
 
         Returns:
-            Validated bounding box coordinates
+            Validated render ID string
 
         Raises:
-            ValueError: If bbox doesn't have exactly 4 coordinates
+            ValueError: If renderId is empty or whitespace-only
         """
-        if len(v) != 4:
-            raise ValueError(
-                "Bbox must have exactly 4 coordinates [minLon, minLat, maxLon, maxLat]"
-            )
-        return v
+        if not v or not v.strip():
+            raise ValueError("renderId cannot be empty or whitespace-only")
+        return v.strip()
