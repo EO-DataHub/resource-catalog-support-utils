@@ -1,149 +1,24 @@
+"""
+Main entry point for the QLR Generator API.
+
+This module creates and configures the FastAPI application using the modular structure.
+"""
+
 import os
-import time
 import logging
-from fastapi import FastAPI, Request, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
-from create_qlr.create_qlr import create_qlr_from_request
-from create_qlr.models import QLRRequest
+from app_factory import create_app
+from create_qlr.constants import ENV_VARS, ENV_DEFAULTS
 
 # Configure logging
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+log_level = os.getenv(ENV_VARS["log_level"], ENV_DEFAULTS["log_level"]).upper()
 logging.basicConfig(
     level=getattr(logging, log_level, logging.INFO),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="Jupyter Notebook API",
-    description="API for executing notebooks and generating QLR files",
-    version="0.1.0",
-)
+# Create the FastAPI application using the factory
+app = create_app()
 
-# Environment-based CORS configuration
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173"
-).split(",")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[o.strip() for o in ALLOWED_ORIGINS if o.strip()],
-    allow_origin_regex=r"^https:\/\/([a-z0-9-]+\.)?(eodatahub\.org\.uk|eodhrc\.sparkgeo\.dev)$",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """Log all incoming requests with timing information"""
-    # Check if request logging is enabled
-    if not os.getenv("LOG_REQUESTS", "true").lower() == "true":
-        return await call_next(request)
-
-    start_time = time.time()
-    client_ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "unknown")
-
-    # Log request details
-    logger.info(
-        f"Request started: {request.method} {request.url.path} "
-        f"from {client_ip} (User-Agent: {user_agent})"
-    )
-
-    # Log query parameters if present
-    if request.query_params:
-        logger.debug(f"Query params: {dict(request.query_params)}")
-
-    # Log request body for POST/PUT requests if enabled
-    if os.getenv("LOG_REQUEST_BODY", "false").lower() == "true" and request.method in [
-        "POST",
-        "PUT",
-        "PATCH",
-    ]:
-        try:
-            body = await request.body()
-            if body:
-                logger.debug(
-                    f"Request body: {body.decode('utf-8')[:500]}..."
-                )  # Limit to 500 chars
-        except Exception as e:
-            logger.warning(f"Could not read request body: {e}")
-
-    # Process the request
-    try:
-        response = await call_next(request)
-    except Exception as e:
-        # Log any unhandled exceptions
-        process_time = time.time() - start_time
-        logger.error(
-            f"Request failed: {request.method} {request.url.path} "
-            f"-> Exception: {str(e)} in {process_time:.3f}s"
-        )
-        raise
-
-    # Calculate processing time
-    process_time = time.time() - start_time
-
-    # Log response details
-    status_emoji = (
-        "✅"
-        if 200 <= response.status_code < 300
-        else "❌"
-        if response.status_code >= 400
-        else "⚠️"
-    )
-    logger.info(
-        f"Request completed: {request.method} {request.url.path} "
-        f"-> {response.status_code} {status_emoji} in {process_time:.3f}s"
-    )
-
-    # Add timing header to response
-    response.headers["X-Process-Time"] = str(round(process_time, 3))
-
-    return response
-
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "version": "0.1.0"}
-
-
-@app.post("/qlr")
-async def create_qlr_endpoint(request: QLRRequest):
-    """
-    Create QLR file from QLRRequest with xyzUrl and render information.
-
-    This endpoint now expects the new payload structure:
-    {
-        "item": { /* STAC item object */ },
-        "xyzUrl": "https://titiler.example.com/...",
-        "renderId": "NDVI"
-    }
-    """
-    try:
-        # Create QLR using the new simplified function
-        qlr_xml = create_qlr_from_request(request)
-
-        # Use item ID for filename
-        output_filename = f"{request.item.id}.qlr"
-
-        return Response(
-            content=qlr_xml,
-            media_type="application/xml",
-            headers={
-                "Content-Disposition": f'attachment; filename="{output_filename}"'
-            },
-        )
-    except ValueError as e:
-        logger.error(f"QLR generation failed: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected error during QLR generation: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error",
-        )
+# Export the app for uvicorn and other ASGI servers
+__all__ = ["app"]

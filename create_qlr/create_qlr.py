@@ -5,18 +5,24 @@ This module provides functionality to create QLR files from STAC items,
 handling template processing, URL extraction, and XML generation.
 """
 
-import os
+from urllib.parse import quote
 from create_qlr.models import QLRRequest
 from create_qlr.constants import (
-    ERROR_MESSAGES,
-    SUCCESS_MESSAGES,
     DEFAULTS,
-    LOG_FORMATS,
 )
+from create_qlr.template_cache import get_cached_template
 import logging
-from typing import Dict, Any
+from typing import TypedDict
 
 logger = logging.getLogger(__name__)
+
+
+class TemplateParams(TypedDict):
+    """Type definition for template parameters used in QLR generation."""
+
+    xyzUrl: str
+    layer_id: str
+    layer_name: str
 
 
 def create_qlr_from_request(request: QLRRequest) -> str:
@@ -37,14 +43,7 @@ def create_qlr_from_request(request: QLRRequest) -> str:
     """
     try:
         logger.debug(
-            LOG_FORMATS["DEBUG"].format(
-                item_id=request.item.id, collection=request.item.collection
-            )
-        )
-
-        # Get the generic template path directly
-        template_path = os.path.join(
-            os.path.dirname(__file__), "templates", "generic_template.xml"
+            f"Processing STAC item: {request.item.id} from collection: {request.item.collection}"
         )
 
         # Extract layer name from STAC item properties
@@ -54,18 +53,15 @@ def create_qlr_from_request(request: QLRRequest) -> str:
         elif hasattr(request.item.properties, "name") and request.item.properties.name:
             layer_name = request.item.properties.name
 
-        # Generate QLR using the xyzUrl directly
+        # Generate QLR using the xyzUrl directly with cached template
         qlr_xml = generate_qlr_from_xyz(
             xyz_url=request.xyzUrl,
             layer_id=request.item.id,
             layer_name=layer_name,
-            template_path=template_path,
         )
 
         logger.info(
-            SUCCESS_MESSAGES["QLR_CREATED"].format(
-                item_id=request.item.id, collection=request.item.collection
-            )
+            f"QLR created successfully for STAC item {request.item.id} with collection {request.item.collection}"
         )
 
         return qlr_xml
@@ -75,9 +71,7 @@ def create_qlr_from_request(request: QLRRequest) -> str:
         raise
     except Exception as e:
         logger.error(
-            LOG_FORMATS["ERROR"].format(
-                item_id=getattr(request.item, "id", "unknown"), error=str(e)
-            )
+            f"QLR generation failed for item {getattr(request.item, 'id', 'unknown')}: {str(e)}"
         )
         raise ValueError(f"Failed to create QLR from request: {str(e)}")
 
@@ -86,73 +80,61 @@ def generate_qlr_from_xyz(
     xyz_url: str,
     layer_id: str,
     layer_name: str,
-    template_path: str,
 ) -> str:
     """
-    Generate QLR XML from xyzUrl and metadata using a template.
+    Generate QLR XML from xyzUrl and metadata using a cached template.
 
-    This function takes a template file and fills it with the provided parameters
-    to create a complete QLR XML file using the xyzUrl directly.
+    This function uses a pre-loaded template from the template cache and fills it
+    with the provided parameters to create a complete QLR XML file.
 
     Args:
         xyz_url: The fully constructed XYZ tile service URL
         layer_id: Unique identifier for the layer
         layer_name: Human-readable name for the layer
-        template_path: Path to the QLR template file
 
     Returns:
         Complete QLR XML as a string
 
     Raises:
-        ValueError: If template path is invalid or QLR generation fails
-        FileNotFoundError: If template file cannot be found
+        ValueError: If QLR generation fails
+        KeyError: If template is not found in cache
     """
-    if not template_path:
-        raise ValueError("Template path is required")
-
-    if not os.path.exists(template_path):
-        raise ValueError(
-            ERROR_MESSAGES["TEMPLATE_NOT_FOUND"].format(collection="default")
-        )
-
     if not layer_name:
         layer_name = DEFAULTS["LAYER_NAME_FALLBACK"]
 
     try:
-        with open(template_path, "r") as f:
-            template = f.read()
+        # Get template from cache instead of loading from disk
+        template = get_cached_template("generic")
 
-        # Template parameters - selectively encode only the parts that need encoding
-        # Don't encode the entire URL, just the query parameters and placeholders
-        # This matches the working format from normal.qlr
+        # Template parameters - use proper URL encoding for specific characters
+        # Encode only the characters that need encoding while preserving tile placeholders
         url_encoded_xyz_url = (
-            xyz_url.replace("{z}", "%7Bz%7D")
-            .replace("{x}", "%7Bx%7D")
-            .replace("{y}", "%7By%7D")
-            .replace("&", "%26")
+            xyz_url.replace("{z}", quote("{z}"))
+            .replace("{x}", quote("{x}"))
+            .replace("{y}", quote("{y}"))
+            .replace("&", quote("&"))
         )
 
-        template_params: Dict[str, Any] = {
+        template_params: TemplateParams = {
             "xyzUrl": url_encoded_xyz_url,
             "layer_id": layer_id,
             "layer_name": layer_name,
         }
 
         qlr_xml = template.format(**template_params)
-        logger.info(f"Successfully generated QLR for {layer_id} using xyzUrl")
+        logger.info(f"Successfully generated QLR for {layer_id} using cached template")
         return qlr_xml
 
-    except FileNotFoundError:
-        error_msg = ERROR_MESSAGES["TEMPLATE_READ_ERROR"].format(
-            template_path=template_path
-        )
-        logger.error(error_msg)
-        raise ValueError(error_msg)
     except KeyError as e:
-        error_msg = f"Missing template parameter: {e}"
-        logger.error(error_msg)
-        raise ValueError(error_msg)
+        if "not found in cache" in str(e):
+            error_msg = "Template not found in cache. Application may not have started properly."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        else:
+            error_msg = f"Missing template parameter: {e}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
     except Exception as e:
-        error_msg = ERROR_MESSAGES["QLR_GENERATION_FAILED"]
+        error_msg = "Failed to generate QLR XML from template"
         logger.error(f"{error_msg}: {e}")
         raise ValueError(f"{error_msg}: {str(e)}")
