@@ -1,6 +1,0 @@
-fastapi>=0.115.14
-uvicorn>=0.35.0
-pydantic>=2.0.0
-pydantic-settings>=2.0.0
-requests>=2.31.0
-mangum>=0.17.0
