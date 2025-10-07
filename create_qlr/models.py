@@ -5,8 +5,8 @@ This module contains Pydantic models for validating and processing STAC items
 received from the API.
 """
 
-from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, validator
+from typing import Optional, Dict, Any, List, Union, Literal
+from pydantic import BaseModel, validator, Field
 
 
 class STACAsset(BaseModel):
@@ -50,8 +50,20 @@ class STACGeometry(BaseModel):
         coordinates: Array of coordinate arrays defining the geometry
     """
 
-    type: str
-    coordinates: List[List[List[float]]]
+    type: Literal[
+        "Point",
+        "LineString",
+        "Polygon",
+        "MultiPoint",
+        "MultiLineString",
+        "MultiPolygon",
+    ]
+    coordinates: Union[
+        List[float],  # Point
+        List[List[float]],  # LineString or MultiPoint
+        List[List[List[float]]],  # Polygon or MultiLineString
+        List[List[List[List[float]]]],  # MultiPolygon
+    ]
 
 
 class STACProperties(BaseModel):
@@ -71,71 +83,143 @@ class STACProperties(BaseModel):
 
 class STACItem(BaseModel):
     """
-    Represents a complete STAC item with all required metadata.
+    Complete STAC item with all required metadata.
 
-    Attributes:
-        type: Always "Feature" for STAC items
-        stac_version: Version of the STAC specification
-        stac_extensions: List of STAC extensions used
-        id: Unique identifier for the item
-        collection: Collection this item belongs to
-        bbox: Bounding box [minLon, minLat, maxLon, maxLat]
-        geometry: Geometric footprint of the item
-        properties: Additional properties/metadata
-        links: List of related links
-        assets: Dictionary of assets (data files)
-        tilesUrl: Custom field for tile service URL
-        render: Custom rendering parameters
+    A STAC item is a GeoJSON Feature representing a spatiotemporal asset
+    (satellite image, derived product, etc.) with metadata about what it is,
+    when and where it was created, and how to access it.
     """
 
-    type: str
-    stac_version: str
-    stac_extensions: Optional[List[str]] = []
-    id: str
-    collection: str
-    bbox: List[float]
-    geometry: STACGeometry
-    properties: STACProperties
-    links: List[STACLink]
-    assets: Dict[str, STACAsset]
+    type: Literal["Feature"] = Field(
+        "Feature", description="GeoJSON Feature type - always 'Feature' for STAC items"
+    )
+    stac_version: str = Field(
+        ...,
+        description="Version of the STAC specification used (e.g., '1.0.0')",
+        example="1.0.0",
+    )
+    stac_extensions: Optional[List[str]] = Field(
+        [],
+        description="List of STAC extensions used by this item",
+        example=["proj", "eo"],
+    )
+    id: str = Field(
+        ...,
+        description="Unique identifier for the item within the collection",
+        example="sentinel2-item-001",
+    )
+    collection: str = Field(
+        ..., description="Collection this item belongs to", example="sentinel2_ard"
+    )
+    bbox: List[float] = Field(
+        ...,
+        description="Bounding box [minLon, minLat, maxLon, maxLat] in WGS84 coordinates",
+        example=[-180, -90, 180, 90],
+    )
+    geometry: STACGeometry = Field(
+        ..., description="Geometric footprint of the item as a GeoJSON geometry object"
+    )
+    properties: STACProperties = Field(
+        ..., description="Additional properties and metadata for the item"
+    )
+    links: List[STACLink] = Field(
+        ..., description="List of related links (self, parent, collection, etc.)"
+    )
+    assets: Dict[str, STACAsset] = Field(
+        ...,
+        description="Dictionary of assets (data files, thumbnails, metadata files, etc.)",
+    )
     # Custom fields that might be added by the frontend
-    tilesUrl: Optional[str] = None
-    render: Optional[Dict[str, Any]] = None
+    tilesUrl: Optional[str] = Field(
+        None,
+        description="Custom field for tile service URL (optional, used by frontend)",
+    )
+    render: Optional[Dict[str, Any]] = Field(
+        None, description="Custom rendering parameters (optional, used by frontend)"
+    )
 
-    @validator("collection")
-    def validate_collection(cls, v: str) -> str:
+
+class QLRRequest(BaseModel):
+    """
+    Request payload for QLR file generation.
+
+    Contains a STAC item, XYZ tile service URL, and render configuration ID
+    needed to generate a QLR file for QGIS.
+    """
+
+    item: STACItem = Field(
+        ...,
+        description="Complete STAC item object containing metadata, geometry, and asset information",
+        example={
+            "type": "Feature",
+            "stac_version": "1.0.0",
+            "id": "sentinel2-item-001",
+            "collection": "sentinel2_ard",
+            "bbox": [-180, -90, 180, 90],
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]]
+                ],
+            },
+            "properties": {"datetime": "2023-01-01T00:00:00Z"},
+            "links": [],
+            "assets": {},
+        },
+    )
+    xyzUrl: str = Field(
+        ...,
+        description="Fully constructed XYZ tile service URL with all render parameters and placeholders",
+        example="https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data.tif&bidx=1&bidx=2&bidx=3&resampling=bilinear",
+    )
+    renderId: str = Field(
+        ...,
+        description="Identifier for the render configuration being used (e.g., 'Natural Color', 'NDVI', 'False Color')",
+        example="Natural Color",
+    )
+
+    @validator("xyzUrl")
+    def validate_xyz_url(cls, v: str) -> str:
         """
-        Validate that collection is not empty or whitespace-only.
+        Validate that xyzUrl is not empty and appears to be a valid URL.
 
         Args:
-            v: Collection string to validate
+            v: XYZ URL string to validate
 
         Returns:
-            Stripped collection string
+            Validated XYZ URL string
 
         Raises:
-            ValueError: If collection is empty or whitespace-only
+            ValueError: If xyzUrl is empty or doesn't appear to be a valid URL
         """
         if not v or not v.strip():
-            raise ValueError("Collection cannot be empty or whitespace-only")
-        return v.strip()
+            raise ValueError("xyzUrl cannot be empty")
 
-    @validator("bbox")
-    def validate_bbox(cls, v: List[float]) -> List[float]:
+        url = v.strip()
+        if not url.startswith(("http://", "https://")):
+            raise ValueError("xyzUrl must be a valid HTTP/HTTPS URL")
+
+        if "{z}" not in url or "{x}" not in url or "{y}" not in url:
+            raise ValueError(
+                "xyzUrl must contain {z}, {x}, and {y} placeholders for tile coordinates"
+            )
+
+        return url
+
+    @validator("renderId")
+    def validate_render_id(cls, v: str) -> str:
         """
-        Validate that bbox has exactly 4 coordinates.
+        Validate that renderId is not empty.
 
         Args:
-            v: Bounding box coordinates to validate
+            v: Render ID string to validate
 
         Returns:
-            Validated bounding box coordinates
+            Validated render ID string
 
         Raises:
-            ValueError: If bbox doesn't have exactly 4 coordinates
+            ValueError: If renderId is empty or whitespace-only
         """
-        if len(v) != 4:
-            raise ValueError(
-                "Bbox must have exactly 4 coordinates [minLon, minLat, maxLon, maxLat]"
-            )
-        return v
+        if not v or not v.strip():
+            raise ValueError("renderId cannot be empty or whitespace-only")
+        return v.strip()

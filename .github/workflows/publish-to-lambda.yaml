@@ -1,0 +1,58 @@
+name: Build and Deploy to Lambda
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-west-1
+  STACK_NAME: qgis-layer-generator
+  S3_BUCKET: qgis-layer-generator-sam-artifacts
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+        role-session-name: GitHubActions-Lambda-Deploy
+    
+    - name: Install SAM CLI
+      run: |
+        pip install aws-sam-cli
+    
+    - name: Build SAM application
+      run: |
+        sam build --use-container
+    
+    - name: Deploy SAM application
+      run: |
+        sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
+          --stack-name ${{ env.STACK_NAME }} \
+          --parameter-overrides Environment=prod \
+          --capabilities CAPABILITY_IAM \
+          --region ${{ env.AWS_REGION }} \
+          --s3-bucket ${{ env.S3_BUCKET }}
+    
+    - name: Get API Gateway URL
+      run: |
+        API_URL=$(aws cloudformation describe-stacks \
+          --stack-name ${{ env.STACK_NAME }} \
+          --region ${{ env.AWS_REGION }} \
+          --query 'Stacks[0].Outputs[?OutputKey==`FastAPIApi`].OutputValue' \
+          --output text)
+        echo "API Gateway URL: $API_URL"
+        echo "API_URL=$API_URL" >> $GITHUB_ENV
