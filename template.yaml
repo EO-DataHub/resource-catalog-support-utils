@@ -5,7 +5,7 @@ Description: 'FastAPI application deployed to AWS Lambda with API Gateway'
 Globals:
   Function:
     Timeout: 10
-    Runtime: python3.11
+    Runtime: python3.12
     Environment:
       Variables:
         LOG_LEVEL: INFO
@@ -30,6 +30,7 @@ Resources:
       CodeUri: ./
       Handler: lambda_handler.handler
       MemorySize: 512
+      BuildMethod: python3.12
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
