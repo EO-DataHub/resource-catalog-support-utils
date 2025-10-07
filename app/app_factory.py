@@ -8,7 +8,7 @@ wiring together all components including middleware, routes, and startup events.
 import logging
 from fastapi import FastAPI
 from .create_qlr.template_cache import load_templates_at_startup
-from .create_qlr.constants import API_CONFIG
+from .core.config import settings
 from .core.middleware import setup_middleware
 from .api.routes import setup_routes
 
@@ -26,13 +26,7 @@ def create_app() -> FastAPI:
         Configured FastAPI application instance
     """
     # Create FastAPI application
-    app = FastAPI(
-        title=API_CONFIG["title"],
-        description=API_CONFIG["description"],
-        version=API_CONFIG["version"],
-        contact=API_CONFIG["contact"],
-        license_info=API_CONFIG["license_info"],
-    )
+    app = FastAPI(**settings.get_fastapi_config())
 
     # Set up middleware
     setup_middleware(app)
@@ -67,7 +61,7 @@ def create_app_with_config(**kwargs) -> FastAPI:
         Configured FastAPI application instance
     """
     # Default configuration
-    default_config = API_CONFIG.copy()
+    default_config = settings.get_fastapi_config()
 
     # Merge with provided configuration
     config = {**default_config, **kwargs}
