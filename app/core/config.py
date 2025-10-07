@@ -33,11 +33,15 @@ class CORSConfig(BaseModel):
     """CORS configuration settings."""
 
     allowed_origins: List[str] = Field(
-        default_factory=lambda: ["http://127.0.0.1:5173", "http://localhost:5173"],
+        default_factory=lambda: [
+            "http://127.0.0.1:5173",
+            "http://localhost:5173",
+            "https://eodatahub.org.uk/",
+            "https://eodhrc.sparkgeo.dev/",
+            "https://develop.eodhrc.sparkgeo.dev/",
+            "https://staging.eodatahub.org.uk/",
+        ],
         description="List of allowed CORS origins",
-    )
-    origin_regex: str = (
-        r"^https:\/\/([a-z0-9-]+\.)?(eodatahub\.org\.uk|eodhrc\.sparkgeo\.dev)$"
     )
     allow_credentials: bool = True
     allow_methods: List[str] = Field(default_factory=lambda: ["*"])
@@ -181,7 +185,6 @@ class Constants:
     # CORS Configuration
     CORS_CONFIG = {
         "default_origins": ",".join(settings.cors.allowed_origins),
-        "origin_regex": settings.cors.origin_regex,
         "allow_credentials": settings.cors.allow_credentials,
         "allow_methods": settings.cors.allow_methods,
         "allow_headers": settings.cors.allow_headers,

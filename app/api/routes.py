@@ -18,7 +18,7 @@ def setup_routes(app: FastAPI) -> None:
     # Include API v1 routes
     app.include_router(health.router, prefix="/api/v1", tags=["Health"])
     app.include_router(qlr.router, prefix="/api/v1", tags=["QLR Generation"])
-    
+
     # Keep backward compatibility with direct routes
     app.include_router(health.router, tags=["Health"])
     app.include_router(qlr.router, tags=["QLR Generation"])
