@@ -30,7 +30,6 @@ Resources:
       CodeUri: ./
       Handler: lambda_handler.handler
       MemorySize: 512
-      BuildMethod: python3.12
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
