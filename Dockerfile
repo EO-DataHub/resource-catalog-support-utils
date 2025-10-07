@@ -12,8 +12,8 @@ COPY ./requirements.txt /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY ./*.py /app
-COPY ./create_qlr/ /app/create_qlr/
+COPY ./app/ /app/app/
+COPY ./lambda_handler.py /app/
 
 # Expose port
 EXPOSE 8000
@@ -23,5 +23,5 @@ ENV LOG_LEVEL=INFO
 ENV LOG_REQUESTS=true
 ENV LOG_REQUEST_BODY=false
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 

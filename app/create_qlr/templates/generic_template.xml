@@ -4,7 +4,7 @@
     <customproperties>
       <Option/>
     </customproperties>
-    <layer-tree-layer expanded="1" legend_split_behavior="0" source="http-header:referer=&amp;type=xyz&amp;url={titiler_base_url}?url={datasource}%26title%3DNatural%20Color%26assets%3Dcog%26bidx%3D3%26bidx%3D2%26bidx%3D1%26nodata%3D0%26color_formula%3DGamma%20RGB%206%20Saturation%200.8%20Sigmoidal%20RGB%2025%200.35" patch_size="-1,-1" id="{layer_id}" name="{layer_name}" providerKey="wms" checked="Qt::Checked" legend_exp="">
+    <layer-tree-layer expanded="1" legend_split_behavior="0" source="http-header:referer=&amp;type=xyz&amp;url={xyzUrl}" patch_size="-1,-1" id="{layer_id}" name="{layer_name}" providerKey="wms" checked="Qt::Checked" legend_exp="">
       <customproperties>
         <Option/>
       </customproperties>
@@ -25,7 +25,7 @@
         <ymax>85.05112877980660357</ymax>
       </wgs84extent>
       <id>{layer_id}</id>
-      <datasource>http-header:referer=&amp;type=xyz&amp;url={titiler_base_url}?url={datasource}%26title%3DNatural%20Color%26assets%3Dcog%26bidx%3D3%26bidx%3D2%26bidx%3D1%26nodata%3D0%26color_formula%3DGamma%20RGB%206%20Saturation%200.8%20Sigmoidal%20RGB%2025%200.35</datasource>
+      <datasource>http-header:referer=&amp;type=xyz&amp;url={xyzUrl}</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -124,4 +124,4 @@
       <blendMode>0</blendMode>
     </maplayer>
   </maplayers>
-</qlr> 
+</qlr>

@@ -1,14 +1,14 @@
 # QLR Generator: FastAPI Service for QGIS Layer Files
 
-This project provides a FastAPI web service that generates QLR (QGIS Layer) files from Cloud Optimized GeoTIFF (COG) URLs. QLR files allow you to easily load and visualize geospatial data in QGIS with proper styling and metadata.
+This project provides a FastAPI web service that generates QLR (QGIS Layer) files from STAC items with pre-constructed XYZ tile service URLs. QLR files allow you to easily load and visualize geospatial data in QGIS with proper styling and metadata.
 
 ## Features
 
-- **Generate QLR files:** Create QGIS layer files from COG URLs using template-based generation
-- **Multiple collection support:** Support for different satellite data collections (Sentinel-1, Sentinel-2)
-- **Automatic styling:** Apply appropriate styling templates based on the data collection
+- **Generate QLR files:** Create QGIS layer files from STAC items with XYZ tile URLs
+- **Simplified architecture:** Single generic template for all data types
+- **Frontend-controlled rendering:** All render parameters handled by the frontend
 - **RESTful API:** Simple HTTP endpoints for integration with other applications
-- **Template-based approach:** Uses XML templates for consistent QLR generation
+- **Template-based approach:** Uses a single XML template for consistent QLR generation
 
 ## Requirements
 
@@ -46,22 +46,33 @@ uvicorn main:app --reload
 
 ### 2. Generate a QLR File
 
-Make a GET request to the `/qlr` endpoint:
+Make a POST request to the `/qlr` endpoint with a JSON payload:
 
 ```http
-http://127.0.0.1:8000/qlr?url=YOUR_COG_URL&collection=COLLECTION_NAME
+POST http://127.0.0.1:8000/qlr
+Content-Type: application/json
+
+{
+  "item": {
+    "type": "Feature",
+    "stac_version": "1.0.0",
+    "id": "example-item-id",
+    "collection": "sentinel2_ard",
+    "bbox": [-180, -90, 180, 90],
+    "geometry": {...},
+    "properties": {...},
+    "links": [...],
+    "assets": {...}
+  },
+  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=...&title=...&assets=cog&bidx=3&bidx=2&bidx=1",
+  "renderId": "Natural Color"
+}
 ```
 
-- Replace `YOUR_COG_URL` with the URL to your Cloud Optimized GeoTIFF file.
-- Replace `COLLECTION_NAME` with one of the supported collections: `sentinel2_ard` or `sentinel1_ard`.
-- Example:
-
-```http
-http://127.0.0.1:8000/qlr?url=https://example.com/sentinel2.tif&collection=sentinel2_ard
-```
-
-- This will return a QLR file that you can download and open in QGIS.
-- The QLR file will include proper styling and metadata based on the collection type.
+- The `item` field contains the complete STAC item object
+- The `xyzUrl` field contains the fully constructed XYZ tile service URL with all render parameters
+- The `renderId` field identifies the render configuration being used
+- This will return a QLR file that you can download and open in QGIS
 
 ### 3. Health Check
 
@@ -77,37 +88,41 @@ This will return a JSON response with the service status.
 
 - `main.py` — FastAPI app for QLR generation
 - `create_qlr/` — QLR generation module
-  - `create_qlr.py` — Main QLR generation logic with template-based approach
-  - `get_template.py` — Template selection logic
-  - `template_config.json` — Collection to template mapping
+  - `create_qlr.py` — Main QLR generation logic with simplified approach
+  - `models.py` — Pydantic models for request validation
+  - `constants.py` — Error messages and configuration constants
   - `templates/` — QLR XML templates
-    - `sentinel1_template.xml` — Sentinel-1 styling template
-    - `sentinel2_template.xml` — Sentinel-2 styling template
+    - `generic_template.xml` — Single template for all data types
 - `requirements.txt` — Project dependencies
 
 ## Notes
 
-- The service generates QLR files using XML templates for consistent styling and metadata.
-- QLR files are generated with appropriate styling based on the collection type (Sentinel-1 vs Sentinel-2).
+- The service generates QLR files using a single generic XML template for all data types.
+- All render parameters (styling, bands, color formulas, etc.) are handled by the frontend and provided in the `xyzUrl`.
 - The service supports CORS for web-based applications.
 - All requests are logged with timing information for monitoring and debugging.
-- Layer IDs are automatically extracted from URLs, with support for both `/items/` URL patterns and fallback extraction.
+- Layer names are extracted from STAC item properties (title, name, or fallback to item ID).
+- The backend uses proper URL encoding to ensure QLR files render correctly in QGIS.
 
 ## API Endpoints
 
 - `GET /health` — Health check endpoint
-- `GET /qlr?url=<cog_url>&collection=<collection_name>` — Generate QLR file
+- `POST /qlr` — Generate QLR file from STAC item and XYZ URL
 
-## Supported Collections
+## Request Format
 
-- `sentinel2_ard` — Sentinel-2 Analysis Ready Data
-- `sentinel1_ard` — Sentinel-1 Analysis Ready Data
+The `/qlr` endpoint expects a JSON payload with:
+
+- `item`: Complete STAC item object
+- `xyzUrl`: Fully constructed XYZ tile service URL with render parameters
+- `renderId`: Identifier for the render configuration
 
 ## Troubleshooting
 
-- If you get a 400 error, check that the COG URL is accessible and the collection name is valid.
+- If you get a 400 error, check that the STAC item is valid and the `xyzUrl` contains proper `{z}`, `{x}`, `{y}` placeholders.
 - If you see errors about missing dependencies, double-check your Python environment and install all required packages.
 - Check the logs for detailed error messages about template generation or URL processing.
-- Ensure the template files exist in the `create_qlr/templates/` directory for your collection type.
+- Ensure the `generic_template.xml` file exists in the `create_qlr/templates/` directory.
+- If QLR files don't render in QGIS, verify that the `xyzUrl` is properly URL-encoded and accessible.
 
 ---
