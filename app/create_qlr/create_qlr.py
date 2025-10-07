@@ -10,9 +10,9 @@ from .models import QLRRequest
 from .constants import (
     DEFAULTS,
 )
-from .template_cache import get_cached_template
 import logging
 from typing import TypedDict
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,41 @@ class TemplateParams(TypedDict):
     xyzUrl: str
     layer_id: str
     layer_name: str
+
+
+def load_template_directly(template_name: str = "generic") -> str:
+    """
+    Load template directly from file without caching.
+
+    Args:
+        template_name: Name of the template to load (default: "generic")
+
+    Returns:
+        Template content as string
+
+    Raises:
+        FileNotFoundError: If template file doesn't exist
+        IOError: If template file cannot be read
+    """
+    # Get the templates directory
+    templates_dir = Path(__file__).parent / "templates"
+
+    # Load the generic template
+    template_path = templates_dir / f"{template_name}_template.xml"
+
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template file not found: {template_path}")
+
+    try:
+        with open(template_path, "r", encoding="utf-8") as f:
+            template_content = f.read()
+
+        logger.debug(f"Successfully loaded template: {template_name}")
+        return template_content
+
+    except IOError as e:
+        logger.error(f"Failed to read template file {template_path}: {e}")
+        raise IOError(f"Failed to read template file {template_path}: {e}")
 
 
 def create_qlr_from_request(request: QLRRequest) -> str:
@@ -82,9 +117,9 @@ def generate_qlr_from_xyz(
     layer_name: str,
 ) -> str:
     """
-    Generate QLR XML from xyzUrl and metadata using a cached template.
+    Generate QLR XML from xyzUrl and metadata using a template file.
 
-    This function uses a pre-loaded template from the template cache and fills it
+    This function loads the template directly from disk and fills it
     with the provided parameters to create a complete QLR XML file.
 
     Args:
@@ -97,14 +132,15 @@ def generate_qlr_from_xyz(
 
     Raises:
         ValueError: If QLR generation fails
-        KeyError: If template is not found in cache
+        FileNotFoundError: If template file is not found
+        IOError: If template file cannot be read
     """
     if not layer_name:
         layer_name = DEFAULTS["LAYER_NAME_FALLBACK"]
 
     try:
-        # Get template from cache instead of loading from disk
-        template = get_cached_template("generic")
+        # Load template directly from file
+        template = load_template_directly("generic")
 
         # Template parameters - use proper URL encoding for specific characters
         # Encode only the characters that need encoding while preserving tile placeholders
@@ -122,18 +158,15 @@ def generate_qlr_from_xyz(
         }
 
         qlr_xml = template.format(**template_params)
-        logger.info(f"Successfully generated QLR for {layer_id} using cached template")
+        logger.info(
+            f"Successfully generated QLR for {layer_id} using direct template loading"
+        )
         return qlr_xml
 
-    except KeyError as e:
-        if "not found in cache" in str(e):
-            error_msg = "Template not found in cache. Application may not have started properly."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-        else:
-            error_msg = f"Missing template parameter: {e}"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+    except (FileNotFoundError, IOError) as e:
+        error_msg = f"Failed to load template: {e}"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
     except Exception as e:
         error_msg = "Failed to generate QLR XML from template"
         logger.error(f"{error_msg}: {e}")
