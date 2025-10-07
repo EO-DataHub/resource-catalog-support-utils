@@ -7,10 +7,10 @@ wiring together all components including middleware, routes, and startup events.
 
 import logging
 from fastapi import FastAPI
-from create_qlr.template_cache import load_templates_at_startup
-from create_qlr.constants import API_CONFIG
-from middleware import setup_middleware
-from routes import setup_routes
+from .create_qlr.template_cache import load_templates_at_startup
+from .create_qlr.constants import API_CONFIG
+from .core.middleware import setup_middleware
+from .api.routes import setup_routes
 
 logger = logging.getLogger(__name__)
 

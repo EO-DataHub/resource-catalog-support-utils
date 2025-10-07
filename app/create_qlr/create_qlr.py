@@ -6,11 +6,11 @@ handling template processing, URL extraction, and XML generation.
 """
 
 from urllib.parse import quote
-from create_qlr.models import QLRRequest
-from create_qlr.constants import (
+from .models import QLRRequest
+from .constants import (
     DEFAULTS,
 )
-from create_qlr.template_cache import get_cached_template
+from .template_cache import get_cached_template
 import logging
 from typing import TypedDict
 

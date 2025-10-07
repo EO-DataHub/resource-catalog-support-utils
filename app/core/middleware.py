@@ -11,7 +11,7 @@ import logging
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from create_qlr.constants import (
+from ..create_qlr.constants import (
     CORS_CONFIG,
     ENV_VARS,
     ENV_DEFAULTS,

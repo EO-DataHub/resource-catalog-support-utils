@@ -6,8 +6,8 @@ This module creates and configures the FastAPI application using the modular str
 
 import os
 import logging
-from app_factory import create_app
-from create_qlr.constants import ENV_VARS, ENV_DEFAULTS
+from .app_factory import create_app
+from .create_qlr.constants import ENV_VARS, ENV_DEFAULTS
 
 # Configure logging
 log_level = os.getenv(ENV_VARS["log_level"], ENV_DEFAULTS["log_level"]).upper()

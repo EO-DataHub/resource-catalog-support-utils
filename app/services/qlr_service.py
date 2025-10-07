@@ -6,9 +6,9 @@ separated from routing and middleware concerns.
 """
 
 import logging
-from create_qlr.create_qlr import create_qlr_from_request
-from create_qlr.models import QLRRequest
-from create_qlr.constants import (
+from ..create_qlr.create_qlr import create_qlr_from_request
+from ..create_qlr.models import QLRRequest
+from ..create_qlr.constants import (
     VALIDATION_MESSAGES,
     SERVICE_INFO,
 )
