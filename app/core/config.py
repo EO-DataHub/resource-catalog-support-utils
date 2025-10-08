@@ -36,10 +36,10 @@ class CORSConfig(BaseModel):
         default_factory=lambda: [
             "http://127.0.0.1:5173",
             "http://localhost:5173",
-            "https://eodatahub.org.uk/",
-            "https://eodhrc.sparkgeo.dev/",
-            "https://develop.eodhrc.sparkgeo.dev/",
-            "https://staging.eodatahub.org.uk/",
+            "https://eodatahub.org.uk",
+            "https://eodhrc.sparkgeo.dev",
+            "https://develop.eodhrc.sparkgeo.dev",
+            "https://staging.eodatahub.org.uk",
         ],
         description="List of allowed CORS origins",
     )
