@@ -5,7 +5,7 @@ Description: 'FastAPI application deployed to AWS Lambda with API Gateway'
 Globals:
   Function:
     Timeout: 10
-    Runtime: python3.12
+    Runtime: python3.13
     Environment:
       Variables:
         LOG_LEVEL: INFO

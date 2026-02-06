@@ -9,16 +9,31 @@ for backward compatibility with existing code.
 from ..core.config import (
     API_CONFIG,
     CORS_CONFIG,
-    ENV_VARS,
-    ENV_DEFAULTS,
-    HTTP_CONFIG,
-    STATUS_EMOJIS,
-    HEALTH_RESPONSE,
-    SERVICE_INFO,
-    VALIDATION_MESSAGES,
-    ERROR_MESSAGES,
     DEFAULTS,
+    ENV_DEFAULTS,
+    ENV_VARS,
+    ERROR_MESSAGES,
+    HEALTH_RESPONSE,
+    HTTP_CONFIG,
+    SERVICE_INFO,
+    STATUS_EMOJIS,
+    VALIDATION_MESSAGES,
 )
+
+__all__ = [
+    "API_CONFIG",
+    "CORS_CONFIG",
+    "DEFAULTS",
+    "ENV_DEFAULTS",
+    "ENV_VARS",
+    "ERROR_MESSAGES",
+    "HEALTH_RESPONSE",
+    "HTTP_CONFIG",
+    "SERVICE_INFO",
+    "STATUS_EMOJIS",
+    "TEMPLATES_DIR",
+    "VALIDATION_MESSAGES",
+]
 
 # Template configuration
 TEMPLATES_DIR = "templates"

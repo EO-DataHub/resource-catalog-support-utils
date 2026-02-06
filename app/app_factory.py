@@ -6,10 +6,12 @@ wiring together all components including middleware and routes.
 """
 
 import logging
+
 from fastapi import FastAPI
+
+from .api.routes import setup_routes
 from .core.config import settings
 from .core.middleware import setup_middleware
-from .api.routes import setup_routes
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ def create_app() -> FastAPI:
     return app
 
 
-def create_app_with_config(**kwargs) -> FastAPI:
+def create_app_with_config(**kwargs: str) -> FastAPI:
     """
     Create FastAPI application with custom configuration.
 

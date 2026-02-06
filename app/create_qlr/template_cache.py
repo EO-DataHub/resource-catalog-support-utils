@@ -5,10 +5,10 @@ This module provides a singleton template cache that loads templates once at sta
 and serves them from memory for improved performance.
 """
 
-import os
 import logging
-from typing import Dict, Optional
+import os
 from pathlib import Path
+from typing import ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +21,17 @@ class TemplateCache:
     in memory for fast access during request processing.
     """
 
-    _instance: Optional["TemplateCache"] = None
-    _templates: Dict[str, str] = {}
-    _initialized: bool = False
+    _instance: ClassVar[Optional["TemplateCache"]] = None
+    _templates: dict[str, str]
+    _initialized: bool
 
     def __new__(cls) -> "TemplateCache":
         """Ensure only one instance exists (singleton pattern)."""
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            instance = super().__new__(cls)
+            instance._templates = {}
+            instance._initialized = False
+            cls._instance = instance
         return cls._instance
 
     def __init__(self) -> None:
@@ -53,15 +56,15 @@ class TemplateCache:
             raise FileNotFoundError(f"Template file not found: {template_path}")
 
         try:
-            with open(template_path, "r", encoding="utf-8") as f:
+            with open(template_path, encoding="utf-8") as f:
                 template_content = f.read()
 
             self._templates[template_name] = template_content
             logger.info(f"Successfully loaded and cached template: {template_name}")
 
-        except IOError as e:
+        except OSError as e:
             logger.error(f"Failed to read template file {template_path}: {e}")
-            raise IOError(f"Failed to read template file {template_path}: {e}")
+            raise OSError(f"Failed to read template file {template_path}: {e}") from e
 
     def get_template(self, template_name: str) -> str:
         """

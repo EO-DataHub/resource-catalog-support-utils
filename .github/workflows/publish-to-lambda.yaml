@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,11 +43,11 @@ jobs:
             echo "SKIP_DEPLOYMENT=false" >> $GITHUB_ENV
           else
             echo "SKIP_DEPLOYMENT=true" >> $GITHUB_ENV
-            echo "⏭️ Skipping deployment for branch: ${{ github.ref_name }}"
+            echo "Skipping deployment for branch: ${{ github.ref_name }}"
             echo "Only 'main' and 'develop' branches trigger deployments"
           fi
           if [[ "$SKIP_DEPLOYMENT" == "false" ]]; then
-            echo "🚀 Deploying to environment: $ENVIRONMENT"
+            echo "Deploying to environment: $ENVIRONMENT"
             echo "Stack name: $STACK_NAME"
             echo "S3 bucket: $S3_BUCKET"
           fi
@@ -80,7 +80,7 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --query 'Stacks[0].Outputs[?OutputKey==`FastAPIApi`].OutputValue' \
             --output text)
-          echo "🚀 Deployment successful!"
+          echo "Deployment successful!"
           echo "Environment: ${{ env.ENVIRONMENT }}"
           echo "Stack: ${{ env.STACK_NAME }}"
           echo "API Gateway URL: $API_URL"
