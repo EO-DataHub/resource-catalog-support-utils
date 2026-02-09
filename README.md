@@ -39,10 +39,11 @@ This project provides a FastAPI web service that generates QLR (QGIS Layer) file
 Run the FastAPI app using Uvicorn:
 
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
 - By default, this will start the API at `http://127.0.0.1:8000`.
+- The `app.main:app` syntax tells uvicorn to import the `app` object from the `app.main` module.
 
 ### 2. Generate a QLR File
 
@@ -86,8 +87,8 @@ This will return a JSON response with the service status.
 
 ## File Structure
 
-- `main.py` — FastAPI app for QLR generation
-- `create_qlr/` — QLR generation module
+- `app/main.py` — FastAPI app entry point for QLR generation
+- `app/create_qlr/` — QLR generation module
   - `create_qlr.py` — Main QLR generation logic with simplified approach
   - `models.py` — Pydantic models for request validation
   - `constants.py` — Error messages and configuration constants
