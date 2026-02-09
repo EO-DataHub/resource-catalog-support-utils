@@ -37,6 +37,7 @@ class CORSConfig(BaseModel):
             "http://127.0.0.1:5173",
             "http://localhost:5173",
             "https://eodatahub.org.uk",
+            "https://test.eodatahub.org.uk",
             "https://eodhrc.sparkgeo.dev",
             "https://develop.eodhrc.sparkgeo.dev",
             "https://staging.eodatahub.org.uk",
@@ -117,10 +118,27 @@ class Settings(BaseSettings):
         allowed_origins_env = values.get("allowed_origins_env")
         if allowed_origins_env:
             # Split comma-separated values and strip whitespace
-            v.allowed_origins = [
+            origins = [
                 origin.strip()
                 for origin in allowed_origins_env.split(",")
                 if origin.strip()
+            ]
+            # Filter out '*' when allow_credentials is True (not allowed by CORS spec)
+            # Also filter out '*' to prevent duplicate headers
+            if v.allow_credentials:
+                origins = [origin for origin in origins if origin != "*"]
+            # Remove any duplicates
+            seen = set()
+            unique_origins = []
+            for origin in origins:
+                if origin not in seen:
+                    seen.add(origin)
+                    unique_origins.append(origin)
+            v.allowed_origins = unique_origins
+        # Also ensure default origins don't include '*' when credentials are enabled
+        elif v.allow_credentials and "*" in v.allowed_origins:
+            v.allowed_origins = [
+                origin for origin in v.allowed_origins if origin != "*"
             ]
         return v
 

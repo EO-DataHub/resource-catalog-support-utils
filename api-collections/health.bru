@@ -1,0 +1,522 @@
+meta {
+  name: health
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{url}}/qlr
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "item": {
+      "bbox": [
+        -4.49905958790245,
+        52.25344953517325,
+        -2.853723127599169,
+        53.24953673463324
+      ],
+      "assets": {
+        "cloud": {
+          "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2026/01/28/S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb_clouds.tif",
+          "type": "image/tiff; application=geotiff",
+          "roles": [
+            "data"
+          ],
+          "size": 3935263,
+          "location": "on_disk"
+        },
+        "cloud_probability": {
+          "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2026/01/28/S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb_clouds_prob.tif",
+          "type": "image/tiff; application=geotiff",
+          "roles": [
+            "data"
+          ],
+          "size": 84453435,
+          "location": "on_disk"
+        },
+        "cog": {
+          "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2026/01/28/S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb_vmsk_sharp_rad_srefdem_stdsref.tif",
+          "type": "image/tiff; application=geotiff",
+          "roles": [
+            "data"
+          ],
+          "size": 1938327661,
+          "location": "on_disk",
+          "eo:bands": [
+            {
+              "eo:central_wavelength": 492.1,
+              "eo:common_name": "blue",
+              "description": "Blue",
+              "eo: full_width_half_max": 0.07,
+              "name": "B02"
+            },
+            {
+              "eo:central_wavelength": 559,
+              "eo:common_name": "green",
+              "description": "Green",
+              "eo: full_width_half_max": 0.04,
+              "name": "B03"
+            },
+            {
+              "eo:central_wavelength": 665,
+              "eo:common_name": "red",
+              "description": "Red",
+              "eo: full_width_half_max": 0.03,
+              "name": "B04"
+            },
+            {
+              "eo:central_wavelength": 703.8,
+              "eo:common_name": "rededge",
+              "description": "Visible and Near Infrared",
+              "eo: full_width_half_max": 0.02,
+              "name": "B05"
+            },
+            {
+              "eo:central_wavelength": 739.1,
+              "eo:common_name": "rededge",
+              "description": "Visible and Near Infrared",
+              "eo: full_width_half_max": 0.02,
+              "name": "B06"
+            },
+            {
+              "eo:central_wavelength": 779.7,
+              "eo:common_name": "rededge",
+              "description": "Visible and Near Infrared",
+              "eo: full_width_half_max": 0.02,
+              "name": "B07"
+            },
+            {
+              "eo:central_wavelength": 833,
+              "eo:common_name": "nir",
+              "description": "Visible and Near Infrared",
+              "eo: full_width_half_max": 0.11,
+              "name": "B08"
+            },
+            {
+              "eo:central_wavelength": 864,
+              "eo:common_name": "nir08",
+              "description": "Visible and Near Infrared",
+              "eo: full_width_half_max": 0.02,
+              "name": "B08a"
+            },
+            {
+              "eo:central_wavelength": 1610.4,
+              "eo:common_name": "swir16",
+              "description": "Short Wave Infrared",
+              "eo: full_width_half_max": 0.09,
+              "name": "B11"
+            },
+            {
+              "eo:central_wavelength": 2185.7,
+              "eo:common_name": "swir22",
+              "description": "Short Wave Infrared",
+              "eo: full_width_half_max": 0.19,
+              "name": "B12"
+            }
+          ]
+        },
+        "metadata": {
+          "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2026/01/28/S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb_vmsk_sharp_rad_srefdem_stdsref_meta.xml",
+          "type": "application/xml",
+          "roles": [
+            "metadata"
+          ],
+          "size": 18456,
+          "location": "on_disk"
+        },
+        "saturated_pixels": {
+          "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2026/01/28/S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb_sat.tif",
+          "type": "image/tiff; application=geotiff",
+          "roles": [
+            "data"
+          ],
+          "size": 1774631,
+          "location": "on_disk"
+        },
+        "thumbnail": {
+          "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2026/01/28/S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb_vmsk_sharp_rad_srefdem_stdsref_thumbnail.jpg",
+          "type": "image/jpeg",
+          "roles": [
+            "thumbnail"
+          ],
+          "size": 106305,
+          "location": "on_disk"
+        },
+        "topographic_shadow": {
+          "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2026/01/28/S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb_toposhad.tif",
+          "type": "image/tiff; application=geotiff",
+          "roles": [
+            "data"
+          ],
+          "size": 2603767,
+          "location": "on_disk"
+        },
+        "valid_pixels": {
+          "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2026/01/28/S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb_valid.tif",
+          "type": "image/tiff; application=geotiff",
+          "roles": [
+            "data"
+          ],
+          "size": 308720,
+          "location": "on_disk"
+        }
+      },
+      "type": "Feature",
+      "properties": {
+        "datetime": "2026-01-28T11:23:21Z"
+      },
+      "links": [
+        {
+          "rel": "self",
+          "type": "application/geo+json",
+          "href": "https://eodatahub.org.uk/api/catalogue/stac/catalogs/public/catalogs/ceda-stac-catalogue/collections/sentinel2_ard/items/neodc.sentinel_ard.data.sentinel_2.2026.01.28.S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb"
+        },
+        {
+          "rel": "parent",
+          "type": "application/json",
+          "href": "https://eodatahub.org.uk/api/catalogue/stac/catalogs/public/catalogs/ceda-stac-catalogue/collections/sentinel2_ard"
+        },
+        {
+          "rel": "collection",
+          "type": "application/json",
+          "href": "https://eodatahub.org.uk/api/catalogue/stac/catalogs/public/catalogs/ceda-stac-catalogue/collections/sentinel2_ard"
+        },
+        {
+          "rel": "root",
+          "type": "application/json",
+          "href": "https://eodatahub.org.uk/api/catalogue/stac/"
+        }
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -4.49905958790245,
+              53.240200815060746
+            ],
+            [
+              -2.853723127599169,
+              53.24953673463324
+            ],
+            [
+              -2.85699281525734,
+              52.26245957867572
+            ],
+            [
+              -4.465566151532104,
+              52.25344953517325
+            ],
+            [
+              -4.49905958790245,
+              53.240200815060746
+            ]
+          ]
+        ]
+      },
+      "stac_version": "1.0.0",
+      "collection": "sentinel2_ard",
+      "id": "neodc.sentinel_ard.data.sentinel_2.2026.01.28.S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb",
+      "render": {
+        "title": "Natural Color",
+        "assets": [
+          "cog"
+        ],
+        "bidx": [
+          3,
+          2,
+          1
+        ],
+        "nodata": 0,
+        "color_formula": "Gamma RGB 6 Saturation 0.8 Sigmoidal RGB 25 0.35",
+        "id": "Natural Color"
+      },
+      "collectionRef": {
+        "id": "sentinel2_ard",
+        "description": "These data have been created by the Department for Environment, Food and Rural Affairs (Defra) and Joint Nature Conservation Committee (JNCC) in order to cost-effectively provide high quality, Analysis Ready Data (ARD) for a wide range of applications. The dataset contains modified Copernicus Sentinel-2 (Level 1C data processed into a surface reflectance product using ARCSI software (Level 2)).",
+        "stac_version": "1.0.0",
+        "links": [
+          {
+            "rel": "items",
+            "type": "application/geo+json",
+            "href": "https://eodatahub.org.uk/api/catalogue/stac/catalogs/public/catalogs/ceda-stac-catalogue/collections/sentinel2_ard/items"
+          },
+          {
+            "rel": "parent",
+            "type": "application/json",
+            "href": "https://eodatahub.org.uk/api/catalogue/stac/catalogs/public/catalogs/ceda-stac-catalogue"
+          },
+          {
+            "rel": "root",
+            "type": "application/json",
+            "href": "https://eodatahub.org.uk/api/catalogue/stac/"
+          },
+          {
+            "rel": "self",
+            "type": "application/json",
+            "href": "https://eodatahub.org.uk/api/catalogue/stac/catalogs/public/catalogs/ceda-stac-catalogue/collections/sentinel2_ard"
+          },
+          {
+            "href": "https://catalogue.ceda.ac.uk/uuid/bf9568b558204b81803eeebcc7f529ef",
+            "rel": "ceda_catalogue",
+            "type": "text/html"
+          },
+          {
+            "href": "https://eodatahub.org.uk/api/catalogue/stac/licences/spdx/text/OGL-UK-3.0.txt",
+            "rel": "license",
+            "type": "text/plain"
+          },
+          {
+            "href": "https://eodatahub.org.uk/api/catalogue/stac/licences/spdx/html/OGL-UK-3.0.html",
+            "rel": "license",
+            "type": "text/html"
+          }
+        ],
+        "stac_extensions": [
+          "https://stac-extensions.github.io/render/v1.0.0/schema.json"
+        ],
+        "title": "Sentinel 2 ARD",
+        "type": "Collection",
+        "assets": {
+          "thumbnail": {
+            "href": "https://dap.ceda.ac.uk/neodc/sentinel_ard/data/sentinel_2/2025/11/15/S2C_20251115_latn572lonw0054_T30VUJ_ORB123_20251115121213_utm30n_osgb_vmsk_sharp_rad_srefdem_stdsref_thumbnail.jpg",
+            "type": "image/jpg",
+            "roles": [
+              "thumbnail"
+            ]
+          }
+        },
+        "license": "OGL-UK-3.0",
+        "extent": {
+          "spatial": {
+            "bbox": [
+              [
+                -9.00034454651177,
+                49.48562028352171,
+                3.1494256015866995,
+                61.33444247301668
+              ]
+            ]
+          },
+          "temporal": {
+            "interval": [
+              [
+                "2015-07-08T00:00:00Z",
+                null
+              ]
+            ]
+          }
+        },
+        "keywords": [
+          "Analysis Ready Data",
+          "Sentinel",
+          "Surface Reflectance",
+          "ARD",
+          "Level2",
+          "ARCSI",
+          "JNCC",
+          "Defra",
+          "ESA"
+        ],
+        "providers": [
+          {
+            "name": "Department for Environment, Food and Rural Affairs (Defra)",
+            "roles": [
+              "producer"
+            ],
+            "url": "https://www.gov.uk/government/organisations/department-for-environment-food-rural-affairs"
+          },
+          {
+            "name": "Joint Nature Conservation Committee (JNCC)",
+            "roles": [
+              "producer"
+            ],
+            "url": "https://jncc.gov.uk"
+          },
+          {
+            "name": "Centre for Environmental Data Analysis (CEDA)",
+            "roles": [
+              "host"
+            ],
+            "url": "https://ceda.ac.uk"
+          }
+        ],
+        "summaries": {
+          "Instrument Family Name Abbreviation": [
+            "MSI"
+          ],
+          "NSSDC Identifier": [
+            "2015-000A"
+          ],
+          "Start Orbit Number": [
+            "030408",
+            "030422",
+            "030436",
+            "030465",
+            "030479",
+            "030508",
+            "030522",
+            "030551",
+            "030565",
+            "030579",
+            "030608",
+            "030622",
+            "030651",
+            "030665",
+            "030694",
+            "030708",
+            "030722",
+            "030751",
+            "030765",
+            "030794",
+            "030808",
+            "030837",
+            "030851",
+            "030865",
+            "030908",
+            "030937",
+            "030951",
+            "030994",
+            "031008",
+            "031037",
+            "031051",
+            "031080",
+            "031094",
+            "031123",
+            "031137",
+            "031151",
+            "031180",
+            "031194",
+            "031223",
+            "031237",
+            "031266",
+            "031280",
+            "031294",
+            "031323",
+            "031337",
+            "031366",
+            "031380",
+            "031409",
+            "031423",
+            "031437",
+            "031466",
+            "031480",
+            "031509",
+            "031523",
+            "031552",
+            "031566",
+            "031580",
+            "031609",
+            "031623",
+            "031666",
+            "031709",
+            "031723",
+            "031766",
+            "031795",
+            "031809",
+            "031838",
+            "031852",
+            "031866",
+            "031895",
+            "031938",
+            "031952",
+            "031981",
+            "031995",
+            "032009",
+            "032038",
+            "032052",
+            "032081",
+            "032095",
+            "032124",
+            "032138",
+            "032152",
+            "032181",
+            "032195",
+            "032224",
+            "032238",
+            "032281",
+            "032295",
+            "032324",
+            "032338",
+            "032367",
+            "032381",
+            "032410",
+            "032424",
+            "032438",
+            "032467",
+            "032481",
+            "032510",
+            "032524",
+            "032553",
+            "032567"
+          ],
+          "Instrument Family Name": [
+            "Multi-Spectral Instrument"
+          ],
+          "Platform Number": [
+            "2A",
+            "2B"
+          ],
+          "Start Relative Orbit Number": [
+            "023",
+            "037",
+            "066",
+            "080",
+            "094",
+            "123",
+            "137"
+          ],
+          "Ground Tracking Direction": [
+            "ascending",
+            "descending"
+          ]
+        },
+        "renders": {
+          "rgb": {
+            "title": "RGB",
+            "assets": [
+              "cog"
+            ],
+            "bidx": [
+              1,
+              2,
+              3
+            ],
+            "rescale": [
+              [
+                0,
+                100
+              ],
+              [
+                0,
+                100
+              ],
+              [
+                0,
+                100
+              ]
+            ],
+            "resampling": "nearest",
+            "tilematrixsets": {
+              "WebMercatorQuad": [
+                0,
+                30
+              ]
+            }
+          }
+        }
+      }
+    },
+    "xyzUrl": "https://eodatahub.org.uk/titiler/core/stac/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?url=https%3A%2F%2Feodatahub.org.uk%2Fapi%2Fcatalogue%2Fstac%2Fcatalogs%2Fpublic%2Fcatalogs%2Fceda-stac-catalogue%2Fcollections%2Fsentinel2_ard%2Fitems%2Fneodc.sentinel_ard.data.sentinel_2.2026.01.28.S2C_20260128_latn528lonw0037_T30UVD_ORB037_20260128114813_utm30n_osgb&title=Natural%20Color&assets=cog&bidx=3&bidx=2&bidx=1&nodata=0&color_formula=Gamma%20RGB%206%20Saturation%200.8%20Sigmoidal%20RGB%2025%200.35&id=Natural%20Color",
+    "renderId": "Natural Color"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
