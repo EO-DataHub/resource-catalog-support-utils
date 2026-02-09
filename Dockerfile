@@ -1,27 +1,30 @@
-# Use a smaller base image since we don't need build tools
-FROM python:3.13-alpine
+FROM python:3.12-slim-bookworm
+
+RUN apt-get update && apt-get install --no-install-recommends -y \
+        build-essential curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ADD https://astral.sh/uv/install.sh /install.sh
+RUN chmod -R 755 /install.sh && /install.sh && rm /install.sh
+
+# Set up the UV environment path correctly
+ENV PATH="/root/.local/bin:${PATH}"
 
 WORKDIR /app
 
-# Install only essential runtime dependencies
-RUN apk add --no-cache \
-    && rm -rf /var/cache/apk/*
+COPY . .
 
-# Copy requirements and install Python packages
-COPY ./requirements.txt /app
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv sync
 
-# Copy application code
-COPY ./*.py /app
-COPY ./create_qlr/ /app/create_qlr/
-
-# Expose port
-EXPOSE 8000
+ENV PATH="/app/.venv/bin:${PATH}"
 
 # Set environment variables
 ENV LOG_LEVEL=INFO
 ENV LOG_REQUESTS=true
 ENV LOG_REQUEST_BODY=false
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose the specified port for FastAPI
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 

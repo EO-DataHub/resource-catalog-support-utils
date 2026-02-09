@@ -3,6 +3,7 @@ on:
     branches:
       - main
       - qlr_only
+  workflow_dispatch:
 
 name: Publish to ECR
 
