@@ -6,12 +6,14 @@ separated from routing and middleware concerns.
 """
 
 import logging
+from typing import Any
+
+from ..create_qlr.constants import (
+    SERVICE_INFO,
+    VALIDATION_MESSAGES,
+)
 from ..create_qlr.create_qlr import create_qlr_from_request
 from ..create_qlr.models import QLRRequest
-from ..create_qlr.constants import (
-    VALIDATION_MESSAGES,
-    SERVICE_INFO,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class QLRService:
     providing a clean interface for the API layer to interact with.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the QLR service."""
         logger.info("QLR service initialized")
 
@@ -56,18 +58,12 @@ class QLRService:
 
         except ValueError as e:
             # Re-raise validation errors as-is
-            logger.error(
-                f"QLR generation validation error for item {request.item.id}: {e}"
-            )
+            logger.error(f"QLR generation validation error for item {request.item.id}: {e}")
             raise
         except Exception as e:
             # Wrap unexpected errors with more context
-            logger.error(
-                f"Unexpected error generating QLR for item {request.item.id}: {e}"
-            )
-            raise ValueError(
-                f"{VALIDATION_MESSAGES['qlr_generation_failed']}: {str(e)}"
-            )
+            logger.error(f"Unexpected error generating QLR for item {request.item.id}: {e}")
+            raise ValueError(f"{VALIDATION_MESSAGES['qlr_generation_failed']}: {e!s}") from e
 
     def validate_request(self, request: QLRRequest) -> bool:
         """
@@ -95,7 +91,7 @@ class QLRService:
         logger.debug(f"Request validation passed for item: {request.item.id}")
         return True
 
-    def get_service_info(self) -> dict:
+    def get_service_info(self) -> dict[str, Any]:
         """
         Get information about the QLR service.
 

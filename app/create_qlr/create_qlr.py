@@ -5,14 +5,15 @@ This module provides functionality to create QLR files from STAC items,
 handling template processing, URL extraction, and XML generation.
 """
 
+import logging
+from pathlib import Path
+from typing import TypedDict
 from urllib.parse import quote
-from .models import QLRRequest
+
 from .constants import (
     DEFAULTS,
 )
-import logging
-from typing import TypedDict
-from pathlib import Path
+from .models import QLRRequest
 
 logger = logging.getLogger(__name__)
 
@@ -49,15 +50,15 @@ def load_template_directly(template_name: str = "generic") -> str:
         raise FileNotFoundError(f"Template file not found: {template_path}")
 
     try:
-        with open(template_path, "r", encoding="utf-8") as f:
+        with open(template_path, encoding="utf-8") as f:
             template_content = f.read()
 
         logger.debug(f"Successfully loaded template: {template_name}")
         return template_content
 
-    except IOError as e:
+    except OSError as e:
         logger.error(f"Failed to read template file {template_path}: {e}")
-        raise IOError(f"Failed to read template file {template_path}: {e}")
+        raise OSError(f"Failed to read template file {template_path}: {e}") from e
 
 
 def create_qlr_from_request(request: QLRRequest) -> str:
@@ -77,15 +78,13 @@ def create_qlr_from_request(request: QLRRequest) -> str:
         ValueError: If QLR creation fails
     """
     try:
-        logger.debug(
-            f"Processing STAC item: {request.item.id} from collection: {request.item.collection}"
-        )
+        logger.debug(f"Processing STAC item: {request.item.id} from collection: {request.item.collection}")
 
         # Extract layer name from STAC item properties
         layer_name = request.item.id
-        if hasattr(request.item.properties, "title") and request.item.properties.title:
+        if request.item.properties.title:
             layer_name = request.item.properties.title
-        elif hasattr(request.item.properties, "name") and request.item.properties.name:
+        elif request.item.properties.name:
             layer_name = request.item.properties.name
 
         # Generate QLR using the xyzUrl directly with cached template
@@ -105,10 +104,8 @@ def create_qlr_from_request(request: QLRRequest) -> str:
         # Re-raise ValueError with original message
         raise
     except Exception as e:
-        logger.error(
-            f"QLR generation failed for item {getattr(request.item, 'id', 'unknown')}: {str(e)}"
-        )
-        raise ValueError(f"Failed to create QLR from request: {str(e)}")
+        logger.error(f"QLR generation failed for item {getattr(request.item, 'id', 'unknown')}: {e!s}")
+        raise ValueError(f"Failed to create QLR from request: {e!s}") from e
 
 
 def generate_qlr_from_xyz(
@@ -158,16 +155,14 @@ def generate_qlr_from_xyz(
         }
 
         qlr_xml = template.format(**template_params)
-        logger.info(
-            f"Successfully generated QLR for {layer_id} using direct template loading"
-        )
+        logger.info(f"Successfully generated QLR for {layer_id} using direct template loading")
         return qlr_xml
 
-    except (FileNotFoundError, IOError) as e:
+    except (OSError, FileNotFoundError) as e:
         error_msg = f"Failed to load template: {e}"
         logger.error(error_msg)
-        raise ValueError(error_msg)
+        raise ValueError(error_msg) from e
     except Exception as e:
         error_msg = "Failed to generate QLR XML from template"
         logger.error(f"{error_msg}: {e}")
-        raise ValueError(f"{error_msg}: {str(e)}")
+        raise ValueError(f"{error_msg}: {e!s}") from e

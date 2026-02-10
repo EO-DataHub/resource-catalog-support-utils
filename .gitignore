@@ -9,7 +9,22 @@ wheels/
 # Virtual environments
 .venv
 
+# Pre-commit (downloaded at setup time)
+.pre-commit-config.yaml
 
 # Jupyter
 notebooks/
 .ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Linting caches
+.ruff_cache/
+.mypy_cache/
