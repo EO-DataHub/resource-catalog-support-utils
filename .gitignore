@@ -13,3 +13,8 @@ wheels/
 # Jupyter
 notebooks/
 .ipynb_checkpoints/
+
+
+.specify/
+.cursor/
+specs/

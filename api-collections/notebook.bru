@@ -1,0 +1,30 @@
+meta {
+  name: notebook
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{url}}/notebooks/launch
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "workspace_name": "sparkgeotest",
+    "username": "geodowd",
+    "action_name": "ndvi",
+    "template_url": "https://raw.githubusercontent.com/geodowd/example-eodh-notebooks/refs/heads/main/ndvi.ipynb",
+    "variables": {
+      "STAC_ITEM_LINK": "https://eodatahub.org.uk/api/catalogue/stac/catalogs/public/catalogs/ceda-stac-catalogue/collections/sentinel2_ard/items/neodc.sentinel_ard.data.sentinel_2.2026.01.10.S2B_20260110_latn527lonw0007_T30UXD_ORB137_20260110130458_utm30n_osgb",
+      "STAC_COLLECTION_NAME": "sentinel2_ard",
+      "AOI": "areal"
+    }
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

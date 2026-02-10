@@ -82,6 +82,16 @@ class Settings(BaseSettings):
     # HTTP Configuration
     http: HTTPConfig = Field(default_factory=HTTPConfig)
 
+    # Notebook Launch / JupyterHub Configuration
+    jupyterhub_base_url: str = Field(
+        default="https://eodatahub-workspaces.org.uk/notebooks",
+        description="Base URL for the JupyterHub instance used to spawn notebooks",
+    )
+    notebook_s3_bucket: str = Field(
+        default="workspaces-eodhp",
+        description="S3 bucket for workspace notebooks",
+    )
+
     # Environment
     environment: str = Field(default="dev", description="Deployment environment")
 
@@ -186,6 +196,7 @@ class Settings(BaseSettings):
             "status": "healthy",
             "version": self.api.version,
             "environment": self.environment,
+            "notebook_s3_bucket": self.notebook_s3_bucket,
         }
 
 

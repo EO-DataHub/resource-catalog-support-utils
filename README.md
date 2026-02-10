@@ -109,6 +109,7 @@ This will return a JSON response with the service status.
 
 - `GET /health` — Health check endpoint
 - `POST /qlr` — Generate QLR file from STAC item and XYZ URL
+- `POST /api/v1/notebooks/launch` — Launch a parameterized Jupyter notebook from a template
 
 ## Request Format
 
