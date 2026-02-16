@@ -1,14 +1,15 @@
-# QLR Generator: FastAPI Service for QGIS Layer Files
+# Resource Catalog Support Utils: FastAPI Service
 
-This project provides a FastAPI web service that generates QLR (QGIS Layer) files from STAC items with pre-constructed XYZ tile service URLs. QLR files allow you to easily load and visualize geospatial data in QGIS with proper styling and metadata.
+This project provides a FastAPI web service that supports resource catalog operations, including generating QLR (QGIS Layer) files from STAC items and launching parameterized Jupyter notebooks for analysis workflows.
 
 ## Features
 
 - **Generate QLR files:** Create QGIS layer files from STAC items with XYZ tile URLs
-- **Simplified architecture:** Single generic template for all data types
+- **Launch notebooks:** Create and launch parameterized Jupyter notebooks from templates for STAC-based analysis
+- **Simplified architecture:** Single generic template for QLR generation across all data types
 - **Frontend-controlled rendering:** All render parameters handled by the frontend
 - **RESTful API:** Simple HTTP endpoints for integration with other applications
-- **Template-based approach:** Uses a single XML template for consistent QLR generation
+- **Template-based approach:** Uses templates for consistent QLR and notebook generation
 
 ## Requirements
 
@@ -39,10 +40,11 @@ This project provides a FastAPI web service that generates QLR (QGIS Layer) file
 Run the FastAPI app using Uvicorn:
 
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
 - By default, this will start the API at `http://127.0.0.1:8000`.
+- The `app.main:app` syntax tells uvicorn to import the `app` object from the `app.main` module.
 
 ### 2. Generate a QLR File
 
@@ -86,13 +88,17 @@ This will return a JSON response with the service status.
 
 ## File Structure
 
-- `main.py` — FastAPI app for QLR generation
-- `create_qlr/` — QLR generation module
+- `app/main.py` — FastAPI app entry point
+- `app/create_qlr/` — QLR generation module
   - `create_qlr.py` — Main QLR generation logic with simplified approach
   - `models.py` — Pydantic models for request validation
   - `constants.py` — Error messages and configuration constants
   - `templates/` — QLR XML templates
     - `generic_template.xml` — Single template for all data types
+- `app/api/v1/` — API endpoint modules
+  - `qlr.py` — QLR generation endpoints
+  - `notebooks.py` — Notebook launch endpoints
+  - `health.py` — Health check endpoints
 - `requirements.txt` — Project dependencies
 
 ## Notes
@@ -108,6 +114,7 @@ This will return a JSON response with the service status.
 
 - `GET /health` — Health check endpoint
 - `POST /qlr` — Generate QLR file from STAC item and XYZ URL
+- `POST /api/v1/notebooks/launch` — Launch a parameterized Jupyter notebook from a template
 
 ## Request Format
 

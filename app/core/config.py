@@ -13,17 +13,20 @@ from pydantic_settings import BaseSettings
 class APIConfig(BaseModel):
     """API configuration settings."""
 
-    title: str = "QLR Generator API"
+    title: str = "Resource Catalog Support Utils API"
     version: str = "0.2.0"
     description: str = """
-    Generate QLR (QGIS Layer) files from STAC items with XYZ tile service URLs.
+    Resource catalog support utilities for STAC-based workflows.
     
-    This API creates QLR files that can be opened directly in QGIS to load geospatial data layers.
+    This API provides services for working with resource catalogs, including:
+    - Generating QLR (QGIS Layer) files from STAC items with XYZ tile service URLs
+    - Launching parameterized Jupyter notebooks from templates for STAC-based analysis
+    
     Key features include template-based generation, frontend-controlled rendering, and template caching.
     
-    Use cases: Load satellite imagery in QGIS, visualize geospatial data, integrate with STAC catalogs.
+    Use cases: Load satellite imagery in QGIS, visualize geospatial data, launch analysis notebooks, integrate with STAC catalogs.
     """
-    contact_name: str = "QLR Generator API Support"
+    contact_name: str = "Resource Catalog Support API"
     contact_email: str = "support@example.com"
     license_name: str = "MIT License"
     license_url: str = "https://opensource.org/licenses/MIT"
@@ -37,6 +40,7 @@ class CORSConfig(BaseModel):
             "http://127.0.0.1:5173",
             "http://localhost:5173",
             "https://eodatahub.org.uk",
+            "https://test.eodatahub.org.uk",
             "https://eodhrc.sparkgeo.dev",
             "https://develop.eodhrc.sparkgeo.dev",
             "https://staging.eodatahub.org.uk",
@@ -81,6 +85,16 @@ class Settings(BaseSettings):
     # HTTP Configuration
     http: HTTPConfig = Field(default_factory=HTTPConfig)
 
+    # Notebook Launch / JupyterHub Configuration
+    jupyterhub_base_url: str = Field(
+        default="https://eodatahub-workspaces.org.uk/notebooks",
+        description="Base URL for the JupyterHub instance used to spawn notebooks",
+    )
+    notebook_s3_bucket: str = Field(
+        default="workspaces-eodhp",
+        description="S3 bucket for workspace notebooks",
+    )
+
     # Environment
     environment: str = Field(default="dev", description="Deployment environment")
 
@@ -117,10 +131,27 @@ class Settings(BaseSettings):
         allowed_origins_env = values.get("allowed_origins_env")
         if allowed_origins_env:
             # Split comma-separated values and strip whitespace
-            v.allowed_origins = [
+            origins = [
                 origin.strip()
                 for origin in allowed_origins_env.split(",")
                 if origin.strip()
+            ]
+            # Filter out '*' when allow_credentials is True (not allowed by CORS spec)
+            # Also filter out '*' to prevent duplicate headers
+            if v.allow_credentials:
+                origins = [origin for origin in origins if origin != "*"]
+            # Remove any duplicates
+            seen = set()
+            unique_origins = []
+            for origin in origins:
+                if origin not in seen:
+                    seen.add(origin)
+                    unique_origins.append(origin)
+            v.allowed_origins = unique_origins
+        # Also ensure default origins don't include '*' when credentials are enabled
+        elif v.allow_credentials and "*" in v.allowed_origins:
+            v.allowed_origins = [
+                origin for origin in v.allowed_origins if origin != "*"
             ]
         return v
 
@@ -168,6 +199,7 @@ class Settings(BaseSettings):
             "status": "healthy",
             "version": self.api.version,
             "environment": self.environment,
+            "notebook_s3_bucket": self.notebook_s3_bucket,
         }
 
 
@@ -225,13 +257,14 @@ class Constants:
 
     # Service Information
     SERVICE_INFO = {
-        "service": "QLR Generator",
+        "service": "Resource Catalog Support Utils",
         "version": settings.api.version,
-        "description": "Generates QLR files from STAC items and XYZ tile URLs",
+        "description": "Provides QLR file generation and notebook launch services for STAC-based workflows",
         "capabilities": [
             "STAC item processing",
             "XYZ tile URL handling",
             "QLR file generation",
+            "Notebook launch and parameterization",
             "Template-based processing",
         ],
     }

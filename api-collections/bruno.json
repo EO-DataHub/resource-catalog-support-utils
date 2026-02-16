@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "resource-catalogue-support-utils",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
