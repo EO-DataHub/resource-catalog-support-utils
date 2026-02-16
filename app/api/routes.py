@@ -1,5 +1,5 @@
 """
-Main API routes configuration for the QLR Generator API.
+Main API routes configuration for the Resource Catalog Support Utils API.
 
 This module sets up the main API routes and includes versioned API endpoints.
 """

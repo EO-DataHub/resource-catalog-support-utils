@@ -1,3 +1,3 @@
 """
-API v1 package for the QLR Generator application.
+API v1 package for the Resource Catalog Support Utils application.
 """

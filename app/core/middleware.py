@@ -1,5 +1,5 @@
 """
-Middleware configuration for the QLR Generator API.
+Middleware configuration for the Resource Catalog Support Utils API.
 
 This module contains all middleware components including request logging,
 CORS configuration, and other cross-cutting concerns.

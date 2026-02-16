@@ -1,5 +1,5 @@
 """
-Business logic for the QLR Generator API.
+Business logic for QLR generation service.
 
 This module contains the core business logic for QLR generation,
 separated from routing and middleware concerns.

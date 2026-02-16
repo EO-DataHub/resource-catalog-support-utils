@@ -1,6 +1,6 @@
 """
-QLR Generator API Application Package.
+Resource Catalog Support Utils API Application Package.
 
-This package contains the FastAPI application for generating QLR files
-from STAC items and XYZ tile services.
+This package contains the FastAPI application for resource catalog operations,
+including QLR file generation and notebook launch services.
 """

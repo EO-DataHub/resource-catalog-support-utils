@@ -1,5 +1,5 @@
 """
-Health check endpoints for the QLR Generator API.
+Health check endpoints for the Resource Catalog Support Utils API.
 """
 
 import logging
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.get(
     "/health",
     summary="Health Check",
-    description="Check the health status of the QLR Generator API. Returns service status and version.",
+    description="Check the health status of the Resource Catalog Support Utils API. Returns service status and version.",
     responses={
         200: {
             "description": "Service is healthy and running",
@@ -32,6 +32,6 @@ async def health_check() -> Dict[str, str]:
     """
     Health check endpoint to verify API service status.
 
-    Returns the current health status and version of the QLR Generator API.
+    Returns the current health status and version of the Resource Catalog Support Utils API.
     """
     return HEALTH_RESPONSE
