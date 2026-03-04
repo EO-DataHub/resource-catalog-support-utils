@@ -44,6 +44,7 @@ class CORSConfig(BaseModel):
             "https://eodhrc.sparkgeo.dev",
             "https://develop.eodhrc.sparkgeo.dev",
             "https://staging.eodatahub.org.uk",
+            "https://netlify.eodh.sparkgeo.dev",
         ],
         description="List of allowed CORS origins",
     )
