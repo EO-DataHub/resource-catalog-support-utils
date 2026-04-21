@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - develop
-      - main
   workflow_dispatch:
 
 env:
   AWS_REGION: eu-west-1
-  S3_BUCKET: qgis-layer-generator-sam-artifacts
+  S3_BUCKET: qgis-layer-generator-sam-artifacts-prod
+  ENVIRONMENT: prod
+  STACK_NAME: resource-catalog-support-utils
 
 jobs:
   deploy:
@@ -29,41 +30,15 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActions-Lambda-Deploy
 
-      - name: Set deployment environment
-        run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
-            echo "STACK_NAME=qgis-layer-generator-prod" >> $GITHUB_ENV
-            echo "S3_BUCKET=qgis-layer-generator-sam-artifacts-prod" >> $GITHUB_ENV
-            echo "SKIP_DEPLOYMENT=false" >> $GITHUB_ENV
-          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
-            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
-            echo "STACK_NAME=qgis-layer-generator-dev" >> $GITHUB_ENV
-            echo "S3_BUCKET=qgis-layer-generator-sam-artifacts-dev" >> $GITHUB_ENV
-            echo "SKIP_DEPLOYMENT=false" >> $GITHUB_ENV
-          else
-            echo "SKIP_DEPLOYMENT=true" >> $GITHUB_ENV
-            echo "Skipping deployment for branch: ${{ github.ref_name }}"
-            echo "Only 'main' and 'develop' branches trigger deployments"
-          fi
-          if [[ "$SKIP_DEPLOYMENT" == "false" ]]; then
-            echo "Deploying to environment: $ENVIRONMENT"
-            echo "Stack name: $STACK_NAME"
-            echo "S3 bucket: $S3_BUCKET"
-          fi
-
       - name: Install SAM CLI
-        if: env.SKIP_DEPLOYMENT == 'false'
         run: |
           pip install aws-sam-cli
 
       - name: Build SAM application
-        if: env.SKIP_DEPLOYMENT == 'false'
         run: |
           sam build --use-container
 
       - name: Deploy SAM application
-        if: env.SKIP_DEPLOYMENT == 'false'
         run: |
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
             --stack-name ${{ env.STACK_NAME }} \
@@ -73,7 +48,6 @@ jobs:
             --s3-bucket ${{ env.S3_BUCKET }}
 
       - name: Get API Gateway URL
-        if: env.SKIP_DEPLOYMENT == 'false'
         run: |
           API_URL=$(aws cloudformation describe-stacks \
             --stack-name ${{ env.STACK_NAME }} \
