@@ -33,6 +33,14 @@ jobs:
       - name: Install SAM CLI
         run: |
           pip install aws-sam-cli
+      
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Export requirements for SAM
+        run: |
+          uv export --no-dev --format requirements-txt --output-file requirements.txt
 
       - name: Build SAM application
         run: |
