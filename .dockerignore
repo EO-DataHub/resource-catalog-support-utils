@@ -4,6 +4,7 @@
 
 # Virtual environments
 .venv
+venv
 
 # Python cache and bytecode
 __pycache__
@@ -35,6 +36,8 @@ README.md
 *.swp
 *.swo
 *~
+.cursor
+.specify
 
 # OS files
 .DS_Store
@@ -43,6 +46,7 @@ Thumbs.db
 # Build artifacts
 build
 dist
+wheels
 *.whl
 *.tar.gz
 
@@ -53,6 +57,7 @@ dist
 
 # Misc
 *.bak
+*.log
 .cache
 
 # Docker files
@@ -62,3 +67,10 @@ Dockerfile
 # Jupyter
 notebooks
 .ipynb_checkpoints
+
+# Environment files
+.env
+.env.*
+
+# Specs
+specs

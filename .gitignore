@@ -8,6 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
 
 # Pre-commit (downloaded at setup time)
 .pre-commit-config.yaml
@@ -19,6 +20,7 @@ notebooks/
 # IDE
 .vscode/
 .idea/
+.cursor/
 
 # Testing
 .pytest_cache/
@@ -28,3 +30,8 @@ htmlcov/
 # Linting caches
 .ruff_cache/
 .mypy_cache/
+
+# Misc
+*.log
+.specify/
+specs/

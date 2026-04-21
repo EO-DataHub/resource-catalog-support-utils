@@ -1,5 +1,5 @@
 """
-QLR generation endpoints for the QLR Generator API.
+QLR generation endpoints for the Resource Catalog Support Utils API.
 """
 
 import logging

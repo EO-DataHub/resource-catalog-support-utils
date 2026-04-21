@@ -1,14 +1,15 @@
-# QLR Generator: FastAPI Service for QGIS Layer Files
+# Resource Catalog Support Utils: FastAPI Service
 
-This project provides a FastAPI web service that generates QLR (QGIS Layer) files from STAC items with pre-constructed XYZ tile service URLs. QLR files allow you to easily load and visualize geospatial data in QGIS with proper styling and metadata.
+This project provides a FastAPI web service that supports resource catalog operations, including generating QLR (QGIS Layer) files from STAC items and launching parameterized Jupyter notebooks for analysis workflows.
 
 ## Features
 
 - **Generate QLR files:** Create QGIS layer files from STAC items with XYZ tile URLs
-- **Simplified architecture:** Single generic template for all data types
+- **Launch notebooks:** Create and launch parameterized Jupyter notebooks from templates for STAC-based analysis
+- **Simplified architecture:** Single generic template for QLR generation across all data types
 - **Frontend-controlled rendering:** All render parameters handled by the frontend
 - **RESTful API:** Simple HTTP endpoints for integration with other applications
-- **Template-based approach:** Uses a single XML template for consistent QLR generation
+- **Template-based approach:** Uses templates for consistent QLR and notebook generation
 
 ## Requirements
 
@@ -102,21 +103,34 @@ This will return a JSON response with the service status.
 
 - `app/main.py` — FastAPI app entry point
 - `app/app_factory.py` — Application factory
-- `app/api/` — API routes (health, QLR generation)
+- `app/api/` — API routes (health, QLR generation, notebook launch)
 - `app/core/` — Core config and middleware
 - `app/create_qlr/` — QLR generation module
   - `create_qlr.py` — Main QLR generation logic
   - `models.py` — Pydantic models for request validation
   - `constants.py` — Configuration constants
   - `templates/` — QLR XML templates
+    - `generic_template.xml` — Single template for all data types
+- `app/api/v1/` — API endpoint modules
+  - `qlr.py` — QLR generation endpoints
+  - `notebooks.py` — Notebook launch endpoints
+  - `health.py` — Health check endpoints
 - `app/services/` — Business logic services
-- `lambda_handler.py` — AWS Lambda handler (Mangum wrapper)
-- `template.yaml` — SAM template for Lambda deployment
+
+## Notes
+
+- The service generates QLR files using a single generic XML template for all data types.
+- All render parameters (styling, bands, color formulas, etc.) are handled by the frontend and provided in the `xyzUrl`.
+- The service supports CORS for web-based applications.
+- All requests are logged with timing information for monitoring and debugging.
+- Layer names are extracted from STAC item properties (title, name, or fallback to item ID).
+- The backend uses proper URL encoding to ensure QLR files render correctly in QGIS.
 
 ## API Endpoints
 
 - `GET /health` — Health check endpoint
 - `POST /qlr` — Generate QLR file from STAC item and XYZ URL
+- `POST /api/v1/notebooks/launch` — Launch a parameterized Jupyter notebook from a template
 
 ## Deployment
 

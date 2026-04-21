@@ -1,5 +1,5 @@
 """
-Main entry point for the QLR Generator API.
+Main entry point for the Resource Catalog Support Utils API.
 
 This module creates and configures the FastAPI application using the modular structure.
 """

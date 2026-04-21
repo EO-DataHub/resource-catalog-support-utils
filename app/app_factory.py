@@ -1,5 +1,5 @@
 """
-Application factory for the QLR Generator API.
+Application factory for the Resource Catalog Support Utils API.
 
 This module creates and configures the FastAPI application instance,
 wiring together all components including middleware and routes.
