@@ -22,28 +22,20 @@ class _FakeS3Client:
 
 def _make_template_notebook_json() -> str:
     nb = nbformat.v4.new_notebook()
-    nb.cells.append(
-        nbformat.v4.new_markdown_cell(
-            "Collection: {{STAC_COLLECTION_NAME}}, Item: {{STAC_ITEM_LINK}}"
-        )
-    )
+    nb.cells.append(nbformat.v4.new_markdown_cell("Collection: {{STAC_COLLECTION_NAME}}, Item: {{STAC_ITEM_LINK}}"))
     return nbformat.writes(nb)
 
 
 def _make_template_with_variables_json() -> str:
     nb = nbformat.v4.new_notebook()
-    nb.cells.append(
-        nbformat.v4.new_markdown_cell(
-            "A: {{A}}, B: {{B}}, Missing: {{MISSING}}"
-        )
-    )
+    nb.cells.append(nbformat.v4.new_markdown_cell("A: {{A}}, B: {{B}}, Missing: {{MISSING}}"))
     return nbformat.writes(nb)
 
 
 def test_launch_notebook_happy_path(monkeypatch):
     template_json = _make_template_notebook_json()
 
-    def fake_get(url, timeout=10):  # noqa: ARG001
+    def fake_get(url, timeout=10):
         return SimpleNamespace(status_code=200, text=template_json)
 
     fake_s3 = _FakeS3Client()
@@ -74,7 +66,7 @@ def test_launch_notebook_happy_path(monkeypatch):
 
 
 def test_launch_notebook_template_fetch_error(monkeypatch):
-    def fake_get(url, timeout=10):  # noqa: ARG001
+    def fake_get(url, timeout=10):
         raise RuntimeError("network error")
 
     fake_s3 = _FakeS3Client()
@@ -94,7 +86,7 @@ def test_launch_notebook_template_fetch_error(monkeypatch):
 def test_launch_notebook_upload_error(monkeypatch):
     template_json = _make_template_notebook_json()
 
-    def fake_get(url, timeout=10):  # noqa: ARG001
+    def fake_get(url, timeout=10):
         return SimpleNamespace(status_code=200, text=template_json)
 
     class _FailingS3Client:
@@ -115,7 +107,7 @@ def test_launch_notebook_upload_error(monkeypatch):
 def test_launch_notebook_unique_servernames(monkeypatch):
     template_json = _make_template_notebook_json()
 
-    def fake_get(url, timeout=10):  # noqa: ARG001
+    def fake_get(url, timeout=10):
         return SimpleNamespace(status_code=200, text=template_json)
 
     fake_s3 = _FakeS3Client()
@@ -149,13 +141,13 @@ def test_launch_notebook_with_variables(monkeypatch):
     """Test that variables are correctly replaced in notebook template."""
     template_json = _make_template_with_variables_json()
 
-    def fake_get(url, timeout=10):  # noqa: ARG001
+    def fake_get(url, timeout=10):
         return SimpleNamespace(status_code=200, text=template_json)
 
     fake_s3 = _FakeS3Client()
     service = NotebookLaunchService(s3_client=fake_s3, http_get=fake_get)
 
-    result = service.launch_notebook(
+    service.launch_notebook(
         workspace_name="sparkgeotest",
         username="geodowd",
         action_name="ndvi",
@@ -181,13 +173,13 @@ def test_launch_notebook_without_variables(monkeypatch):
     """Test that notebook works when variables is omitted or empty."""
     template_json = _make_template_with_variables_json()
 
-    def fake_get(url, timeout=10):  # noqa: ARG001
+    def fake_get(url, timeout=10):
         return SimpleNamespace(status_code=200, text=template_json)
 
     fake_s3 = _FakeS3Client()
     service = NotebookLaunchService(s3_client=fake_s3, http_get=fake_get)
 
-    result = service.launch_notebook(
+    service.launch_notebook(
         workspace_name="sparkgeotest",
         username="geodowd",
         action_name="ndvi",
@@ -201,4 +193,3 @@ def test_launch_notebook_without_variables(monkeypatch):
     assert "{{A}}" in cell_source
     assert "{{B}}" in cell_source
     assert "{{MISSING}}" in cell_source
-

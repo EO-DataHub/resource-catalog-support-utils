@@ -18,13 +18,13 @@ class APIConfig(BaseModel):
     version: str = "0.2.0"
     description: str = """
     Resource catalog support utilities for STAC-based workflows.
-    
+
     This API provides services for working with resource catalogs, including:
     - Generating QLR (QGIS Layer) files from STAC items with XYZ tile service URLs
     - Launching parameterized Jupyter notebooks from templates for STAC-based analysis
-    
+
     Key features include template-based generation, frontend-controlled rendering, and template caching.
-    
+
     Use cases: Load satellite imagery in QGIS, visualize geospatial data, launch analysis notebooks, integrate with STAC catalogs.
     """
     contact_name: str = "Resource Catalog Support API"

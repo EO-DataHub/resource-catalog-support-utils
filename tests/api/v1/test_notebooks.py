@@ -1,14 +1,11 @@
-import types
-
 from fastapi.testclient import TestClient
 
-from app.main import app
 from app.api.v1 import notebooks
+from app.main import app
 from app.services.notebook_launch_service import (
     NotebookLaunchResult,
     TemplateFetchError,
 )
-
 
 client = TestClient(app)
 
@@ -41,9 +38,7 @@ def _override_service_template_error():
 
 
 def test_launch_notebook_happy_path():
-    app.dependency_overrides[notebooks.get_notebook_launch_service] = (
-        _override_service_success
-    )
+    app.dependency_overrides[notebooks.get_notebook_launch_service] = _override_service_success
 
     payload = {
         "workspace_name": "sparkgeotest",
@@ -57,17 +52,13 @@ def test_launch_notebook_happy_path():
     data = response.json()
     assert data["servername"] == "ndvi_123456"
     assert data["notebook_path"] == "jupyter/ndvi_123456.ipynb"
-    assert data["spawn_url"].startswith(
-        "https://eodatahub-workspaces.org.uk/notebooks/hub/spawn/"
-    )
+    assert data["spawn_url"].startswith("https://eodatahub-workspaces.org.uk/notebooks/hub/spawn/")
 
     app.dependency_overrides.pop(notebooks.get_notebook_launch_service, None)
 
 
 def test_launch_notebook_template_error():
-    app.dependency_overrides[notebooks.get_notebook_launch_service] = (
-        _override_service_template_error
-    )
+    app.dependency_overrides[notebooks.get_notebook_launch_service] = _override_service_template_error
 
     payload = {
         "workspace_name": "sparkgeotest",
@@ -116,9 +107,7 @@ def _override_service_unique_servernames():
 
 
 def test_launch_notebook_distinct_servernames():
-    app.dependency_overrides[notebooks.get_notebook_launch_service] = (
-        _override_service_unique_servernames
-    )
+    app.dependency_overrides[notebooks.get_notebook_launch_service] = _override_service_unique_servernames
 
     payload = {
         "workspace_name": "sparkgeotest",
@@ -148,9 +137,7 @@ def test_launch_notebook_distinct_servernames():
 
 def test_launch_notebook_with_variables():
     """Test that variables can be passed in the API request."""
-    app.dependency_overrides[notebooks.get_notebook_launch_service] = (
-        _override_service_success
-    )
+    app.dependency_overrides[notebooks.get_notebook_launch_service] = _override_service_success
 
     payload = {
         "workspace_name": "sparkgeotest",
@@ -174,9 +161,7 @@ def test_launch_notebook_with_variables():
 
 def test_launch_notebook_without_variables():
     """Test that API works correctly when variables is not provided."""
-    app.dependency_overrides[notebooks.get_notebook_launch_service] = (
-        _override_service_success
-    )
+    app.dependency_overrides[notebooks.get_notebook_launch_service] = _override_service_success
 
     payload = {
         "workspace_name": "sparkgeotest",
@@ -192,4 +177,3 @@ def test_launch_notebook_without_variables():
     assert data["notebook_path"] == "jupyter/ndvi_123456.ipynb"
 
     app.dependency_overrides.pop(notebooks.get_notebook_launch_service, None)
-

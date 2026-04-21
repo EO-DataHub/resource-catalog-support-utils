@@ -4,6 +4,7 @@ Pytest configuration and fixtures for tests.
 This file ensures the project root is in the Python path so tests can import
 the app module.
 """
+
 import sys
 from pathlib import Path
 

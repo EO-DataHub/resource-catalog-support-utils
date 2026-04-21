@@ -62,8 +62,8 @@ class NotebookLaunchService:
 
     def __init__(
         self,
-        s3_client: Any | None = None,
-        http_get: Any | None = None,
+        s3_client: Any | None = None,  # noqa: ANN401
+        http_get: Any | None = None,  # noqa: ANN401
     ) -> None:
         self._settings = settings
         self._s3_client = s3_client or boto3.client("s3")
@@ -155,13 +155,11 @@ class NotebookLaunchService:
                     "status_code": response.status_code,
                 },
             )
-            raise TemplateFetchError(
-                f"Template URL returned status {response.status_code}"
-            )
+            raise TemplateFetchError(f"Template URL returned status {response.status_code}")
 
         try:
             return nbformat.reads(response.text, as_version=4)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(
                 "Failed to parse notebook template JSON",
                 extra={"template_url": template_url},
@@ -248,11 +246,5 @@ class NotebookLaunchService:
         Construct the JupyterHub spawn URL according to the documented format.
         """
         base = self._settings.jupyterhub_base_url.rstrip("/")
-        next_url = (
-            f"{base}/user/{username}/{servername}/lab/tree/s3/{notebook_path}"
-        )
-        return (
-            f"{base}/hub/spawn/{username}/{servername}"
-            f"?workspace={workspace_name}&next={next_url}"
-        )
-
+        next_url = f"{base}/user/{username}/{servername}/lab/tree/s3/{notebook_path}"
+        return f"{base}/hub/spawn/{username}/{servername}?workspace={workspace_name}&next={next_url}"

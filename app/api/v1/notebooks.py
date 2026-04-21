@@ -39,7 +39,7 @@ class NotebookLaunchSuccess(BaseModel):
 
     servername: str
     notebook_path: str
-    spawn_url: AnyHttpUrl
+    spawn_url: str
 
 
 class ErrorResponse(BaseModel):
@@ -100,10 +100,9 @@ async def launch_notebook(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": str(exc), "code": NotebookUploadError.code},
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception:
         logger.exception("Unexpected error during notebook launch")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": "Internal server error", "code": "INTERNAL_ERROR"},
         )
-
