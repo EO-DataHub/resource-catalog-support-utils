@@ -5,6 +5,7 @@ This module sets up the main API routes and includes versioned API endpoints.
 """
 
 from fastapi import FastAPI
+
 from .v1 import health, qlr, notebooks
 
 

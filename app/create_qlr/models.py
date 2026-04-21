@@ -5,8 +5,9 @@ This module contains Pydantic models for validating and processing STAC items
 received from the API.
 """
 
-from typing import Optional, Dict, Any, List, Union, Literal
-from pydantic import BaseModel, validator, Field
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class STACAsset(BaseModel):
@@ -21,9 +22,9 @@ class STACAsset(BaseModel):
     """
 
     href: str
-    roles: Optional[List[str]] = []
-    size: Optional[int] = None
-    location: Optional[str] = None
+    roles: list[str] | None = []
+    size: int | None = None
+    location: str | None = None
 
 
 class STACLink(BaseModel):
@@ -37,7 +38,7 @@ class STACLink(BaseModel):
     """
 
     rel: str
-    type: Optional[str] = None
+    type: str | None = None
     href: str
 
 
@@ -58,12 +59,12 @@ class STACGeometry(BaseModel):
         "MultiLineString",
         "MultiPolygon",
     ]
-    coordinates: Union[
-        List[float],  # Point
-        List[List[float]],  # LineString or MultiPoint
-        List[List[List[float]]],  # Polygon or MultiLineString
-        List[List[List[List[float]]]],  # MultiPolygon
-    ]
+    coordinates: (
+        list[float]  # Point
+        | list[list[float]]  # LineString or MultiPoint
+        | list[list[list[float]]]  # Polygon or MultiLineString
+        | list[list[list[list[float]]]]  # MultiPolygon
+    )
 
 
 class STACProperties(BaseModel):
@@ -74,11 +75,11 @@ class STACProperties(BaseModel):
         datetime: ISO 8601 datetime string
     """
 
-    datetime: str
+    model_config = ConfigDict(extra="allow")
 
-    # Allow additional properties
-    class Config:
-        extra = "allow"
+    datetime: str
+    title: str | None = None
+    name: str | None = None
 
 
 class STACItem(BaseModel):
@@ -90,53 +91,37 @@ class STACItem(BaseModel):
     when and where it was created, and how to access it.
     """
 
-    type: Literal["Feature"] = Field(
-        "Feature", description="GeoJSON Feature type - always 'Feature' for STAC items"
-    )
+    type: Literal["Feature"] = Field("Feature", description="GeoJSON Feature type - always 'Feature' for STAC items")
     stac_version: str = Field(
         ...,
         description="Version of the STAC specification used (e.g., '1.0.0')",
-        example="1.0.0",
     )
-    stac_extensions: Optional[List[str]] = Field(
+    stac_extensions: list[str] | None = Field(
         [],
         description="List of STAC extensions used by this item",
-        example=["proj", "eo"],
     )
     id: str = Field(
         ...,
         description="Unique identifier for the item within the collection",
-        example="sentinel2-item-001",
     )
-    collection: str = Field(
-        ..., description="Collection this item belongs to", example="sentinel2_ard"
-    )
-    bbox: List[float] = Field(
+    collection: str = Field(..., description="Collection this item belongs to")
+    bbox: list[float] = Field(
         ...,
         description="Bounding box [minLon, minLat, maxLon, maxLat] in WGS84 coordinates",
-        example=[-180, -90, 180, 90],
     )
-    geometry: STACGeometry = Field(
-        ..., description="Geometric footprint of the item as a GeoJSON geometry object"
-    )
-    properties: STACProperties = Field(
-        ..., description="Additional properties and metadata for the item"
-    )
-    links: List[STACLink] = Field(
-        ..., description="List of related links (self, parent, collection, etc.)"
-    )
-    assets: Dict[str, STACAsset] = Field(
+    geometry: STACGeometry = Field(..., description="Geometric footprint of the item as a GeoJSON geometry object")
+    properties: STACProperties = Field(..., description="Additional properties and metadata for the item")
+    links: list[STACLink] = Field(..., description="List of related links (self, parent, collection, etc.)")
+    assets: dict[str, STACAsset] = Field(
         ...,
         description="Dictionary of assets (data files, thumbnails, metadata files, etc.)",
     )
     # Custom fields that might be added by the frontend
-    tilesUrl: Optional[str] = Field(
+    tilesUrl: str | None = Field(
         None,
         description="Custom field for tile service URL (optional, used by frontend)",
     )
-    render: Optional[Dict[str, Any]] = Field(
-        None, description="Custom rendering parameters (optional, used by frontend)"
-    )
+    render: dict[str, Any] | None = Field(None, description="Custom rendering parameters (optional, used by frontend)")
 
 
 class QLRRequest(BaseModel):
@@ -150,48 +135,20 @@ class QLRRequest(BaseModel):
     item: STACItem = Field(
         ...,
         description="Complete STAC item object containing metadata, geometry, and asset information",
-        example={
-            "type": "Feature",
-            "stac_version": "1.0.0",
-            "id": "sentinel2-item-001",
-            "collection": "sentinel2_ard",
-            "bbox": [-180, -90, 180, 90],
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
-                    [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]]
-                ],
-            },
-            "properties": {"datetime": "2023-01-01T00:00:00Z"},
-            "links": [],
-            "assets": {},
-        },
     )
     xyzUrl: str = Field(
         ...,
         description="Fully constructed XYZ tile service URL with all render parameters and placeholders",
-        example="https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data.tif&bidx=1&bidx=2&bidx=3&resampling=bilinear",
     )
     renderId: str = Field(
         ...,
         description="Identifier for the render configuration being used (e.g., 'Natural Color', 'NDVI', 'False Color')",
-        example="Natural Color",
     )
 
-    @validator("xyzUrl")
+    @field_validator("xyzUrl")
+    @classmethod
     def validate_xyz_url(cls, v: str) -> str:
-        """
-        Validate that xyzUrl is not empty and appears to be a valid URL.
-
-        Args:
-            v: XYZ URL string to validate
-
-        Returns:
-            Validated XYZ URL string
-
-        Raises:
-            ValueError: If xyzUrl is empty or doesn't appear to be a valid URL
-        """
+        """Validate that xyzUrl is not empty and appears to be a valid URL."""
         if not v or not v.strip():
             raise ValueError("xyzUrl cannot be empty")
 
@@ -200,26 +157,14 @@ class QLRRequest(BaseModel):
             raise ValueError("xyzUrl must be a valid HTTP/HTTPS URL")
 
         if "{z}" not in url or "{x}" not in url or "{y}" not in url:
-            raise ValueError(
-                "xyzUrl must contain {z}, {x}, and {y} placeholders for tile coordinates"
-            )
+            raise ValueError("xyzUrl must contain {z}, {x}, and {y} placeholders for tile coordinates")
 
         return url
 
-    @validator("renderId")
+    @field_validator("renderId")
+    @classmethod
     def validate_render_id(cls, v: str) -> str:
-        """
-        Validate that renderId is not empty.
-
-        Args:
-            v: Render ID string to validate
-
-        Returns:
-            Validated render ID string
-
-        Raises:
-            ValueError: If renderId is empty or whitespace-only
-        """
+        """Validate that renderId is not empty."""
         if not v or not v.strip():
             raise ValueError("renderId cannot be empty or whitespace-only")
         return v.strip()

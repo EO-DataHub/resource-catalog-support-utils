@@ -5,6 +5,7 @@ This module creates and configures the FastAPI application using the modular str
 """
 
 import logging
+
 from .app_factory import create_app
 from .core.config import settings
 

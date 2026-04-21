@@ -14,39 +14,42 @@ This project provides a FastAPI web service that supports resource catalog opera
 ## Requirements
 
 - Python 3.13+
-- [Uvicorn](https://www.uvicorn.org/) (for running FastAPI)
-- All dependencies in `requirements.txt` (install with your preferred tool, e.g. `pip`, `uv`, or `poetry`)
+- [uv](https://docs.astral.sh/uv/) (for dependency management)
 
-## Installation
+## Development Setup
 
 1. **Clone the repository** and navigate to the project directory.
 
-2. **Install dependencies** (using pip as an example):
+2. **Install dependencies:**
 
    ```bash
-   pip install -r requirements.txt
+   make setup
    ```
 
-   Or, to use the exact versions in `requirements.txt`:
+3. **Run checks:**
 
    ```bash
-   pip install fastapi>=0.115.14 uvicorn>=0.35.0 pydantic>=2.0.0 requests>=2.31.0
+   make check
+   ```
+
+4. **Format code:**
+
+   ```bash
+   make format
    ```
 
 ## Usage
 
-### 1. Start the FastAPI App
-
-Run the FastAPI app using Uvicorn:
+### Start the FastAPI App
 
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 - By default, this will start the API at `http://127.0.0.1:8000`.
 - The `app.main:app` syntax tells uvicorn to import the `app` object from the `app.main` module.
 
-### 2. Generate a QLR File
+### Generate a QLR File
 
 Make a POST request to the `/qlr` endpoint with a JSON payload:
 
@@ -76,30 +79,43 @@ Content-Type: application/json
 - The `renderId` field identifies the render configuration being used
 - This will return a QLR file that you can download and open in QGIS
 
-### 3. Health Check
-
-Check if the service is running:
+### Health Check
 
 ```http
-http://127.0.0.1:8000/health
+GET http://127.0.0.1:8000/health
 ```
 
 This will return a JSON response with the service status.
 
+## Make Targets
+
+| Target | Description |
+|---|---|
+| `make setup` | Install dependencies and set up pre-commit hooks |
+| `make check` | Run all linting and type checks (ruff, pyright, validate-pyproject) |
+| `make format` | Auto-format code with ruff |
+| `make test` | Run tests in watch mode |
+| `make testonce` | Run tests once |
+| `make dockerbuild` | Build Docker image |
+| `make dockerpush` | Build and push Docker image to ECR |
+
 ## File Structure
 
 - `app/main.py` — FastAPI app entry point
+- `app/app_factory.py` — Application factory
+- `app/api/` — API routes (health, QLR generation, notebook launch)
+- `app/core/` — Core config and middleware
 - `app/create_qlr/` — QLR generation module
-  - `create_qlr.py` — Main QLR generation logic with simplified approach
+  - `create_qlr.py` — Main QLR generation logic
   - `models.py` — Pydantic models for request validation
-  - `constants.py` — Error messages and configuration constants
+  - `constants.py` — Configuration constants
   - `templates/` — QLR XML templates
     - `generic_template.xml` — Single template for all data types
 - `app/api/v1/` — API endpoint modules
   - `qlr.py` — QLR generation endpoints
   - `notebooks.py` — Notebook launch endpoints
   - `health.py` — Health check endpoints
-- `requirements.txt` — Project dependencies
+- `app/services/` — Business logic services
 
 ## Notes
 
@@ -116,20 +132,14 @@ This will return a JSON response with the service status.
 - `POST /qlr` — Generate QLR file from STAC item and XYZ URL
 - `POST /api/v1/notebooks/launch` — Launch a parameterized Jupyter notebook from a template
 
-## Request Format
+## Deployment
 
-The `/qlr` endpoint expects a JSON payload with:
+### Docker (ECS/ECR)
 
-- `item`: Complete STAC item object
-- `xyzUrl`: Fully constructed XYZ tile service URL with render parameters
-- `renderId`: Identifier for the render configuration
+The Docker image is built and pushed via the `publish` job in GitHub Actions on push to main.
 
-## Troubleshooting
+### AWS Lambda
 
-- If you get a 400 error, check that the STAC item is valid and the `xyzUrl` contains proper `{z}`, `{x}`, `{y}` placeholders.
-- If you see errors about missing dependencies, double-check your Python environment and install all required packages.
-- Check the logs for detailed error messages about template generation or URL processing.
-- Ensure the `generic_template.xml` file exists in the `create_qlr/templates/` directory.
-- If QLR files don't render in QGIS, verify that the `xyzUrl` is properly URL-encoded and accessible.
+The Lambda deployment uses AWS SAM and is triggered via the `publish-to-lambda` workflow on push to `main` or `develop` branches.
 
 ---

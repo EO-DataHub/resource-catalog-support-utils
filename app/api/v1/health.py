@@ -3,8 +3,9 @@ Health check endpoints for the Resource Catalog Support Utils API.
 """
 
 import logging
-from typing import Dict
+
 from fastapi import APIRouter
+
 from ...create_qlr.constants import HEALTH_RESPONSE
 
 logger = logging.getLogger(__name__)
@@ -20,15 +21,11 @@ router = APIRouter()
     responses={
         200: {
             "description": "Service is healthy and running",
-            "content": {
-                "application/json": {
-                    "example": {"status": "healthy", "version": "0.1.0"}
-                }
-            },
+            "content": {"application/json": {"example": {"status": "healthy", "version": "0.1.0"}}},
         }
     },
 )
-async def health_check() -> Dict[str, str]:
+async def health_check() -> dict[str, str]:
     """
     Health check endpoint to verify API service status.
 
