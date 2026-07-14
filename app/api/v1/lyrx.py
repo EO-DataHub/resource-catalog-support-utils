@@ -9,8 +9,9 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import Response
 
 from ...create_lyrx.constants import DEFAULTS, ERROR_MESSAGES
-from ...create_lyrx.create_lyrx import TemplateUnavailableError, create_lyrx_from_request
+from ...create_lyrx.create_lyrx import create_lyrx_from_request
 from ...create_lyrx.models import LYRXRequest
+from ...layer_generation.template_loader import TemplateUnavailableError
 
 logger = logging.getLogger(__name__)
 

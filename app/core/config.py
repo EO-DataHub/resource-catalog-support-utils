@@ -264,9 +264,6 @@ class Constants:
 
     # Validation Messages
     VALIDATION_MESSAGES: ClassVar[dict[str, str]] = {
-        "stac_item_required": "STAC item is required",
-        "xyz_url_required": "XYZ URL is required",
-        "render_id_required": "Render ID is required",
         "qlr_generation_failed": "Failed to generate QLR",
         "lyrx_generation_failed": "Failed to generate LYRX",
     }

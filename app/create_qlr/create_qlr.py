@@ -10,12 +10,14 @@ from pathlib import Path
 from typing import TypedDict
 from urllib.parse import quote
 
-from .constants import (
-    DEFAULTS,
-)
+from ..layer_generation.generation import create_document_from_request
+from ..layer_generation.template_loader import TemplateUnavailableError, load_template
+from .constants import DEFAULTS
 from .models import QLRRequest
 
 logger = logging.getLogger(__name__)
+
+_TEMPLATE_PATH = Path(__file__).parent / "templates" / "generic_template.xml"
 
 
 class TemplateParams(TypedDict):
@@ -26,86 +28,24 @@ class TemplateParams(TypedDict):
     layer_name: str
 
 
-def load_template_directly(template_name: str = "generic") -> str:
-    """
-    Load template directly from file without caching.
-
-    Args:
-        template_name: Name of the template to load (default: "generic")
-
-    Returns:
-        Template content as string
-
-    Raises:
-        FileNotFoundError: If template file doesn't exist
-        IOError: If template file cannot be read
-    """
-    # Get the templates directory
-    templates_dir = Path(__file__).parent / "templates"
-
-    # Load the generic template
-    template_path = templates_dir / f"{template_name}_template.xml"
-
-    if not template_path.exists():
-        raise FileNotFoundError(f"Template file not found: {template_path}")
-
-    try:
-        with open(template_path, encoding="utf-8") as f:
-            template_content = f.read()
-
-        logger.debug(f"Successfully loaded template: {template_name}")
-        return template_content
-
-    except OSError as e:
-        logger.error(f"Failed to read template file {template_path}: {e}")
-        raise OSError(f"Failed to read template file {template_path}: {e}") from e
-
-
 def create_qlr_from_request(request: QLRRequest) -> str:
     """
-    Create QLR file from a QLRRequest with xyzUrl and render information.
+    Create QLR file from a QLRRequest with xyzUrl information.
 
     This function uses the provided xyzUrl directly in the template, eliminating
     the need for collection-specific URL construction.
 
     Args:
-        request: A QLRRequest object containing item, xyzUrl, and renderId
+        request: A QLRRequest object containing item and xyzUrl
 
     Returns:
         Complete QLR XML as a string
 
     Raises:
         ValueError: If QLR creation fails
+        TemplateUnavailableError: If the QLR template file cannot be loaded
     """
-    try:
-        logger.debug(f"Processing STAC item: {request.item.id} from collection: {request.item.collection}")
-
-        # Extract layer name from STAC item properties
-        layer_name = request.item.id
-        if request.item.properties.title:
-            layer_name = request.item.properties.title
-        elif request.item.properties.name:
-            layer_name = request.item.properties.name
-
-        # Generate QLR using the xyzUrl directly with cached template
-        qlr_xml = generate_qlr_from_xyz(
-            xyz_url=request.xyzUrl,
-            layer_id=request.item.id,
-            layer_name=layer_name,
-        )
-
-        logger.info(
-            f"QLR created successfully for STAC item {request.item.id} with collection {request.item.collection}"
-        )
-
-        return qlr_xml
-
-    except ValueError:
-        # Re-raise ValueError with original message
-        raise
-    except Exception as e:
-        logger.error(f"QLR generation failed for item {getattr(request.item, 'id', 'unknown')}: {e!s}")
-        raise ValueError(f"Failed to create QLR from request: {e!s}") from e
+    return create_document_from_request(request, "QLR", generate_qlr_from_xyz)
 
 
 def generate_qlr_from_xyz(
@@ -129,16 +69,18 @@ def generate_qlr_from_xyz(
 
     Raises:
         ValueError: If QLR generation fails
-        FileNotFoundError: If template file is not found
-        IOError: If template file cannot be read
+        TemplateUnavailableError: If the QLR template file cannot be loaded
     """
     if not layer_name:
         layer_name = DEFAULTS["LAYER_NAME_FALLBACK"]
 
     try:
-        # Load template directly from file
-        template = load_template_directly("generic")
+        template = load_template(_TEMPLATE_PATH)
+    except (OSError, FileNotFoundError) as e:
+        logger.error(f"Failed to load template: {e}")
+        raise TemplateUnavailableError("QLR template is unavailable") from e
 
+    try:
         # Template parameters - use proper URL encoding for specific characters
         # Encode only the characters that need encoding while preserving tile placeholders
         url_encoded_xyz_url = (
@@ -158,10 +100,6 @@ def generate_qlr_from_xyz(
         logger.info(f"Successfully generated QLR for {layer_id} using direct template loading")
         return qlr_xml
 
-    except (OSError, FileNotFoundError) as e:
-        error_msg = f"Failed to load template: {e}"
-        logger.error(error_msg)
-        raise ValueError(error_msg) from e
     except Exception as e:
         error_msg = "Failed to generate QLR XML from template"
         logger.error(f"{error_msg}: {e}")

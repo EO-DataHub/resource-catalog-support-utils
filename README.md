@@ -70,19 +70,17 @@ Content-Type: application/json
     "links": [...],
     "assets": {...}
   },
-  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=...&title=...&assets=cog&bidx=3&bidx=2&bidx=1",
-  "renderId": "Natural Color"
+  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=...&title=...&assets=cog&bidx=3&bidx=2&bidx=1"
 }
 ```
 
 - The `item` field contains the complete STAC item object
 - The `xyzUrl` field contains the fully constructed XYZ tile service URL with all render parameters
-- The `renderId` field identifies the render configuration being used
 - This will return a QLR file that you can download and open in QGIS
 
 ### Generate a LYRX File
 
-Make a POST request to the `/lyrx` endpoint with the `item` and `xyzUrl` fields from the `/qlr` payload (see above); `/lyrx` does not require a `renderId`:
+Make a POST request to the `/lyrx` endpoint with the same `item` and `xyzUrl` fields as the `/qlr` payload (see above):
 
 ```http
 POST http://127.0.0.1:8000/lyrx

@@ -9,6 +9,7 @@ from fastapi.responses import Response
 
 from ...create_qlr.constants import ERROR_MESSAGES
 from ...create_qlr.models import QLRRequest
+from ...layer_generation.template_loader import TemplateUnavailableError
 from ...services.qlr_service import QLRService
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ qlr_service = QLRService()
     Generate a QLR (QGIS Layer) file from a STAC item and XYZ tile service URL.
 
     Creates a QLR file that can be opened directly in QGIS to load geospatial data layers.
-    Requires a complete STAC item object, fully constructed XYZ tile URL, and render ID.
+    Requires a complete STAC item object and a fully constructed XYZ tile URL.
     Returns an XML file with .qlr extension for use in QGIS.
     """,
     responses={
@@ -94,6 +95,12 @@ async def create_qlr_endpoint(request: QLRRequest) -> Response:
             media_type="application/xml",
             headers={"Content-Disposition": f'attachment; filename="{output_filename}"'},
         )
+    except TemplateUnavailableError as e:
+        logger.error(f"QLR template unavailable: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES["internal_server_error"],
+        ) from e
     except ValueError as e:
         logger.error(f"QLR generation failed: {e}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e

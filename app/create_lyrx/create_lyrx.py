@@ -8,53 +8,16 @@ handling template processing, URL extraction, and CIM JSON generation.
 import json
 import logging
 import re
-from functools import cache
 from pathlib import Path
 
+from ..layer_generation.generation import create_document_from_request
+from ..layer_generation.template_loader import TemplateUnavailableError, load_template
 from .constants import DEFAULTS
 from .models import LYRXRequest
 
 logger = logging.getLogger(__name__)
 
-
-class TemplateUnavailableError(Exception):
-    """Raised when the LYRX template file cannot be loaded from disk."""
-
-
-@cache
-def load_template_directly(template_name: str = "generic") -> str:
-    """
-    Load a template from disk, caching its contents in memory.
-
-    Template files are static content, so the disk read only happens once
-    per process per template_name; subsequent calls are served from cache.
-
-    Args:
-        template_name: Name of the template to load (default: "generic")
-
-    Returns:
-        Template content as string
-
-    Raises:
-        FileNotFoundError: If template file doesn't exist
-        IOError: If template file cannot be read
-    """
-    templates_dir = Path(__file__).parent / "templates"
-    template_path = templates_dir / f"{template_name}_template.lyrx"
-
-    if not template_path.exists():
-        raise FileNotFoundError(f"Template file not found: {template_path}")
-
-    try:
-        with open(template_path, encoding="utf-8") as f:
-            template_content = f.read()
-
-        logger.debug(f"Successfully loaded template: {template_name}")
-        return template_content
-
-    except OSError as e:
-        logger.error(f"Failed to read template file {template_path}: {e}")
-        raise OSError(f"Failed to read template file {template_path}: {e}") from e
+_TEMPLATE_PATH = Path(__file__).parent / "templates" / "generic_template.lyrx"
 
 
 def create_lyrx_from_request(request: LYRXRequest) -> str:
@@ -74,38 +37,7 @@ def create_lyrx_from_request(request: LYRXRequest) -> str:
         ValueError: If LYRX creation fails
         TemplateUnavailableError: If the LYRX template file cannot be loaded
     """
-    try:
-        logger.debug(f"Processing STAC item: {request.item.id} from collection: {request.item.collection}")
-
-        # Extract layer name from STAC item properties
-        layer_name = request.item.id
-        if request.item.properties.title:
-            layer_name = request.item.properties.title
-        elif request.item.properties.name:
-            layer_name = request.item.properties.name
-
-        # Generate LYRX using the xyzUrl directly with cached template
-        lyrx_json = generate_lyrx_from_xyz(
-            xyz_url=request.xyzUrl,
-            layer_id=request.item.id,
-            layer_name=layer_name,
-        )
-
-        logger.info(
-            f"LYRX created successfully for STAC item {request.item.id} with collection {request.item.collection}"
-        )
-
-        return lyrx_json
-
-    except ValueError:
-        # Re-raise ValueError with original message
-        raise
-    except TemplateUnavailableError:
-        # Re-raise as-is; this is a server-side deployment fault, not a validation error
-        raise
-    except Exception as e:
-        logger.error(f"LYRX generation failed for item {getattr(request.item, 'id', 'unknown')}: {e!s}")
-        raise ValueError(f"Failed to create LYRX from request: {e!s}") from e
+    return create_document_from_request(request, "LYRX", generate_lyrx_from_xyz)
 
 
 def _as_json_string_literal(value: str) -> str:
@@ -148,8 +80,7 @@ def generate_lyrx_from_xyz(
         layer_id = DEFAULTS["LAYER_NAME_FALLBACK"]
 
     try:
-        # Load template directly from file
-        template = load_template_directly("generic")
+        template = load_template(_TEMPLATE_PATH)
     except (OSError, FileNotFoundError) as e:
         logger.error(f"Failed to load template: {e}")
         raise TemplateUnavailableError("LYRX template is unavailable") from e

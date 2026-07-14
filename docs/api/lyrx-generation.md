@@ -37,7 +37,7 @@ Content-Type: application/json
 
 ### Request Body
 
-Same `item` (STAC item) and `xyzUrl` fields as the [`/qlr` request body](./qlr-generation.md#request-body); unlike `/qlr`, `/lyrx` does not require a `renderId`.
+Identical shape to the [`/qlr` request body](./qlr-generation.md#request-body) — `item` (STAC item) and `xyzUrl` are both required.
 
 ---
 
