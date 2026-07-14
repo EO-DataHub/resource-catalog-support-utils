@@ -27,8 +27,8 @@ class APIConfig(BaseModel):
 
     Use cases: Load satellite imagery in QGIS, visualize geospatial data, launch analysis notebooks, integrate with STAC catalogs.
     """
-    contact_name: str = "Resource Catalog Support API"
-    contact_email: str = "support@example.com"
+    contact_name: str = "EODH"
+    contact_email: str = "enquiries@eodatahub.org.uk"
     license_name: str = "MIT License"
     license_url: str = "https://opensource.org/licenses/MIT"
 
