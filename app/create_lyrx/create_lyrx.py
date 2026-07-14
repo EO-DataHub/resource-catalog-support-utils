@@ -8,6 +8,7 @@ handling template processing, URL extraction, and CIM JSON generation.
 import json
 import logging
 import re
+from functools import cache
 from pathlib import Path
 
 from .constants import DEFAULTS
@@ -20,9 +21,13 @@ class TemplateUnavailableError(Exception):
     """Raised when the LYRX template file cannot be loaded from disk."""
 
 
+@cache
 def load_template_directly(template_name: str = "generic") -> str:
     """
-    Load template directly from file without caching.
+    Load a template from disk, caching its contents in memory.
+
+    Template files are static content, so the disk read only happens once
+    per process per template_name; subsequent calls are served from cache.
 
     Args:
         template_name: Name of the template to load (default: "generic")
