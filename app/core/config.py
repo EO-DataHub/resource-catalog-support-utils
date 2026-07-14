@@ -251,11 +251,12 @@ class Constants:
     SERVICE_INFO: ClassVar[dict[str, Any]] = {
         "service": "Resource Catalog Support Utils",
         "version": settings.api.version,
-        "description": "Provides QLR file generation and notebook launch services for STAC-based workflows",
+        "description": "Provides QLR/LYRX file generation and notebook launch services for STAC-based workflows",
         "capabilities": [
             "STAC item processing",
             "XYZ tile URL handling",
             "QLR file generation",
+            "LYRX file generation",
             "Notebook launch and parameterization",
             "Template-based processing",
         ],
@@ -267,6 +268,7 @@ class Constants:
         "xyz_url_required": "XYZ URL is required",
         "render_id_required": "Render ID is required",
         "qlr_generation_failed": "Failed to generate QLR",
+        "lyrx_generation_failed": "Failed to generate LYRX",
     }
 
     # Error Messages

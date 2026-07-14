@@ -6,7 +6,7 @@ This module sets up the main API routes and includes versioned API endpoints.
 
 from fastapi import FastAPI
 
-from .v1 import health, notebooks, qlr
+from .v1 import health, lyrx, notebooks, qlr
 
 
 def setup_routes(app: FastAPI) -> None:
@@ -19,9 +19,11 @@ def setup_routes(app: FastAPI) -> None:
     # Include API v1 routes
     app.include_router(health.router, prefix="/api/v1", tags=["Health"])
     app.include_router(qlr.router, prefix="/api/v1", tags=["QLR Generation"])
+    app.include_router(lyrx.router, prefix="/api/v1", tags=["LYRX Generation"])
     app.include_router(notebooks.router, prefix="/api/v1", tags=["Notebook Launch"])
 
     # Keep backward compatibility with direct routes
     app.include_router(health.router, tags=["Health"])
     app.include_router(qlr.router, tags=["QLR Generation"])
+    app.include_router(lyrx.router, tags=["LYRX Generation"])
     app.include_router(notebooks.router, tags=["Notebook Launch"])
