@@ -3,13 +3,13 @@
   "version": "3.7.0",
   "build": 1901,
   "layers": [
-    "CIMPATH=Map/{{LAYER_ID}}.json"
+    "CIMPATH=Map/${LAYER_ID}.json"
   ],
   "layerDefinitions": [
     {
       "type": "CIMTiledServiceLayer",
-      "name": "{{LAYER_NAME}}",
-      "uRI": "CIMPATH=Map/{{LAYER_ID}}.json",
+      "name": "${LAYER_NAME}",
+      "uRI": "CIMPATH=Map/${LAYER_ID}.json",
       "sourceModifiedTime": {
         "type": "TimeInstant"
       },
@@ -28,7 +28,7 @@
       "serviceConnection": {
         "type": "CIMStandardServiceConnection",
         "serviceType": "1",
-        "url": "{{XYZ_URL}}"
+        "url": "${XYZ_URL}"
       },
       "transparentColor": {
         "type": "CIMRGBColor",

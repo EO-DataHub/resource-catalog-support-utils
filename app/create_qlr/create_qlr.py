@@ -11,7 +11,7 @@ from typing import TypedDict
 from urllib.parse import quote
 
 from ..layer_generation.generation import create_document_from_request
-from ..layer_generation.template_loader import TemplateUnavailableError, load_template
+from ..layer_generation.template_loader import generate_from_template
 from .constants import DEFAULTS
 from .models import QLRRequest
 
@@ -73,16 +73,12 @@ def generate_qlr_from_xyz(
     """
     if not layer_name:
         layer_name = DEFAULTS["LAYER_NAME_FALLBACK"]
+    if not layer_id:
+        layer_id = DEFAULTS["LAYER_NAME_FALLBACK"]
 
-    try:
-        template = load_template(_TEMPLATE_PATH)
-    except (OSError, FileNotFoundError) as e:
-        logger.error(f"Failed to load template: {e}")
-        raise TemplateUnavailableError("QLR template is unavailable") from e
-
-    try:
-        # Template parameters - use proper URL encoding for specific characters
-        # Encode only the characters that need encoding while preserving tile placeholders
+    def render(template: str) -> str:
+        # Use proper URL encoding for specific characters - encode only the
+        # characters that need encoding while preserving tile placeholders
         url_encoded_xyz_url = (
             xyz_url.replace("{z}", quote("{z}"))
             .replace("{x}", quote("{x}"))
@@ -100,7 +96,4 @@ def generate_qlr_from_xyz(
         logger.info(f"Successfully generated QLR for {layer_id} using direct template loading")
         return qlr_xml
 
-    except Exception as e:
-        error_msg = "Failed to generate QLR XML from template"
-        logger.error(f"{error_msg}: {e}")
-        raise ValueError(f"{error_msg}: {e!s}") from e
+    return generate_from_template(_TEMPLATE_PATH, "QLR", render)

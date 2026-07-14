@@ -7,11 +7,11 @@ handling template processing, URL extraction, and CIM JSON generation.
 
 import json
 import logging
-import re
 from pathlib import Path
+from string import Template
 
 from ..layer_generation.generation import create_document_from_request
-from ..layer_generation.template_loader import TemplateUnavailableError, load_template
+from ..layer_generation.template_loader import generate_from_template
 from .constants import DEFAULTS
 from .models import LYRXRequest
 
@@ -45,9 +45,6 @@ def _as_json_string_literal(value: str) -> str:
     return json.dumps(value)[1:-1]
 
 
-_TEMPLATE_PLACEHOLDER_PATTERN = re.compile(r"\{\{(XYZ_URL|LAYER_ID|LAYER_NAME)\}\}")
-
-
 def generate_lyrx_from_xyz(
     xyz_url: str,
     layer_id: str,
@@ -79,26 +76,14 @@ def generate_lyrx_from_xyz(
     if not layer_id:
         layer_id = DEFAULTS["LAYER_NAME_FALLBACK"]
 
-    try:
-        template = load_template(_TEMPLATE_PATH)
-    except (OSError, FileNotFoundError) as e:
-        logger.error(f"Failed to load template: {e}")
-        raise TemplateUnavailableError("LYRX template is unavailable") from e
-
-    try:
-        # Single substitution pass over the original template: a dict lookup keyed by
-        # placeholder name, so text inserted for one placeholder can never be re-matched
-        # by another placeholder's substitution.
+    def render(template: str) -> str:
         substitutions = {
             "XYZ_URL": _as_json_string_literal(xyz_url),
             "LAYER_ID": _as_json_string_literal(layer_id),
             "LAYER_NAME": _as_json_string_literal(layer_name),
         }
-        lyrx_json = _TEMPLATE_PLACEHOLDER_PATTERN.sub(lambda m: substitutions[m.group(1)], template)
+        lyrx_json = Template(template).substitute(substitutions)
         logger.info(f"Successfully generated LYRX for {layer_id} using direct template loading")
         return lyrx_json
 
-    except Exception as e:
-        error_msg = "Failed to generate LYRX JSON from template"
-        logger.error(f"{error_msg}: {e}")
-        raise ValueError(f"{error_msg}: {e!s}") from e
+    return generate_from_template(_TEMPLATE_PATH, "LYRX", render)

@@ -7,8 +7,9 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import Response
 
-from ...create_qlr.constants import ERROR_MESSAGES
+from ...create_qlr.constants import DEFAULTS, ERROR_MESSAGES
 from ...create_qlr.models import QLRRequest
+from ...layer_generation.filename import safe_filename_component
 from ...layer_generation.template_loader import TemplateUnavailableError
 from ...services.qlr_service import QLRService
 
@@ -87,8 +88,9 @@ async def create_qlr_endpoint(request: QLRRequest) -> Response:
         # Use business logic service to generate QLR
         qlr_xml = qlr_service.generate_qlr(request)
 
-        # Use item ID for filename
-        output_filename = f"{request.item.id}.qlr"
+        # Use item ID for filename, sanitized and falling back to a default when empty
+        filename_id = safe_filename_component(request.item.id) or DEFAULTS["LAYER_NAME_FALLBACK"]
+        output_filename = f"{filename_id}.qlr"
 
         return Response(
             content=qlr_xml,

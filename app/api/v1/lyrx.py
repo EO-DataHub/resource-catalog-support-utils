@@ -3,7 +3,6 @@ LYRX generation endpoints for the Resource Catalog Support Utils API.
 """
 
 import logging
-import re
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import Response
@@ -11,20 +10,10 @@ from fastapi.responses import Response
 from ...create_lyrx.constants import DEFAULTS, ERROR_MESSAGES
 from ...create_lyrx.create_lyrx import create_lyrx_from_request
 from ...create_lyrx.models import LYRXRequest
+from ...layer_generation.filename import safe_filename_component
 from ...layer_generation.template_loader import TemplateUnavailableError
 
 logger = logging.getLogger(__name__)
-
-# Characters that are unsafe to embed unescaped in a Content-Disposition filename:
-# control characters (including CR/LF, which could otherwise inject extra header
-# content), and the quote/backslash characters that terminate the quoted-string.
-_UNSAFE_FILENAME_CHARS = re.compile(r'[\x00-\x1f\x7f"\\]')
-
-
-def _safe_filename_component(value: str) -> str:
-    """Strip characters that are unsafe in a Content-Disposition filename."""
-    return _UNSAFE_FILENAME_CHARS.sub("", value)
-
 
 # Create router for LYRX endpoints
 router = APIRouter()
@@ -103,7 +92,7 @@ async def create_lyrx_endpoint(request: LYRXRequest) -> Response:
         lyrx_json = create_lyrx_from_request(request)
 
         # Use item ID for filename, sanitized and falling back to a default when empty
-        filename_id = _safe_filename_component(request.item.id) or DEFAULTS["LAYER_NAME_FALLBACK"]
+        filename_id = safe_filename_component(request.item.id) or DEFAULTS["LAYER_NAME_FALLBACK"]
         output_filename = f"{filename_id}.lyrx"
 
         return Response(
