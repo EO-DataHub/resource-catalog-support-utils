@@ -163,8 +163,4 @@ This will return a JSON response with the service status.
 
 The Docker image is built and pushed via the `publish` job in GitHub Actions on push to main.
 
-### AWS Lambda
-
-The Lambda deployment uses AWS SAM and is triggered via the `publish-to-lambda` workflow on push to `main` or `develop` branches.
-
 ---
