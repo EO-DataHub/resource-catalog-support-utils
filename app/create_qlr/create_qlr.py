@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 from typing import TypedDict
 from urllib.parse import quote
+from xml.sax.saxutils import escape
 
 from ..layer_generation.generation import create_document_from_request
 from ..layer_generation.template_loader import generate_from_template
@@ -26,6 +27,11 @@ class TemplateParams(TypedDict):
     xyzUrl: str
     layer_id: str
     layer_name: str
+
+
+def _as_xml_text(value: str) -> str:
+    """Escape a value for safe embedding inside XML text or a double-quoted attribute."""
+    return escape(value, {'"': "&quot;"})
 
 
 def create_qlr_from_request(request: QLRRequest) -> str:
@@ -87,9 +93,9 @@ def generate_qlr_from_xyz(
         )
 
         template_params: TemplateParams = {
-            "xyzUrl": url_encoded_xyz_url,
-            "layer_id": layer_id,
-            "layer_name": layer_name,
+            "xyzUrl": _as_xml_text(url_encoded_xyz_url),
+            "layer_id": _as_xml_text(layer_id),
+            "layer_name": _as_xml_text(layer_name),
         }
 
         qlr_xml = template.format(**template_params)
