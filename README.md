@@ -1,15 +1,16 @@
 # Resource Catalog Support Utils: FastAPI Service
 
-This project provides a FastAPI web service that supports resource catalog operations, including generating QLR (QGIS Layer) files from STAC items and launching parameterized Jupyter notebooks for analysis workflows.
+This project provides a FastAPI web service that supports resource catalog operations, including generating QLR (QGIS Layer) and LYRX (ArcGIS Layer) files from STAC items and launching parameterized Jupyter notebooks for analysis workflows.
 
 ## Features
 
 - **Generate QLR files:** Create QGIS layer files from STAC items with XYZ tile URLs
+- **Generate LYRX files:** Create ArcGIS Pro layer files from STAC items with XYZ tile URLs
 - **Launch notebooks:** Create and launch parameterized Jupyter notebooks from templates for STAC-based analysis
-- **Simplified architecture:** Single generic template for QLR generation across all data types
+- **Simplified architecture:** Single generic template for QLR/LYRX generation across all data types
 - **Frontend-controlled rendering:** All render parameters handled by the frontend
 - **RESTful API:** Simple HTTP endpoints for integration with other applications
-- **Template-based approach:** Uses templates for consistent QLR and notebook generation
+- **Template-based approach:** Uses templates for consistent QLR, LYRX, and notebook generation
 
 ## Requirements
 
@@ -69,15 +70,30 @@ Content-Type: application/json
     "links": [...],
     "assets": {...}
   },
-  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=...&title=...&assets=cog&bidx=3&bidx=2&bidx=1",
-  "renderId": "Natural Color"
+  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=...&title=...&assets=cog&bidx=3&bidx=2&bidx=1"
 }
 ```
 
 - The `item` field contains the complete STAC item object
 - The `xyzUrl` field contains the fully constructed XYZ tile service URL with all render parameters
-- The `renderId` field identifies the render configuration being used
 - This will return a QLR file that you can download and open in QGIS
+
+### Generate a LYRX File
+
+Make a POST request to the `/lyrx` endpoint with the same `item` and `xyzUrl` fields as the `/qlr` payload (see above):
+
+```http
+POST http://127.0.0.1:8000/lyrx
+Content-Type: application/json
+
+{
+  "item": {...},
+  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=...&title=...&assets=cog&bidx=3&bidx=2&bidx=1"
+}
+```
+
+- This will return a LYRX file that you can download and open in ArcGIS Pro
+- See [`docs/api/lyrx-generation.md`](docs/api/lyrx-generation.md) for full details
 
 ### Health Check
 
@@ -103,7 +119,7 @@ This will return a JSON response with the service status.
 
 - `app/main.py` — FastAPI app entry point
 - `app/app_factory.py` — Application factory
-- `app/api/` — API routes (health, QLR generation, notebook launch)
+- `app/api/` — API routes (health, QLR generation, LYRX generation, notebook launch)
 - `app/core/` — Core config and middleware
 - `app/create_qlr/` — QLR generation module
   - `create_qlr.py` — Main QLR generation logic
@@ -111,25 +127,34 @@ This will return a JSON response with the service status.
   - `constants.py` — Configuration constants
   - `templates/` — QLR XML templates
     - `generic_template.xml` — Single template for all data types
+- `app/create_lyrx/` — LYRX generation module
+  - `create_lyrx.py` — Main LYRX generation logic
+  - `models.py` — Pydantic models for request validation
+  - `constants.py` — Configuration constants
+  - `templates/` — LYRX (CIM JSON) templates
+    - `generic_template.lyrx` — Single template for all data types
 - `app/api/v1/` — API endpoint modules
   - `qlr.py` — QLR generation endpoints
+  - `lyrx.py` — LYRX generation endpoints
   - `notebooks.py` — Notebook launch endpoints
   - `health.py` — Health check endpoints
 - `app/services/` — Business logic services
 
 ## Notes
 
-- The service generates QLR files using a single generic XML template for all data types.
+- The service generates QLR and LYRX files using a single generic template each, for all data types.
 - All render parameters (styling, bands, color formulas, etc.) are handled by the frontend and provided in the `xyzUrl`.
 - The service supports CORS for web-based applications.
 - All requests are logged with timing information for monitoring and debugging.
 - Layer names are extracted from STAC item properties (title, name, or fallback to item ID).
 - The backend uses proper URL encoding to ensure QLR files render correctly in QGIS.
+- LYRX generation points at the same pre-rendered tile endpoint (rather than the raw raster), reusing the `xyzUrl`'s `{z}`/`{x}`/`{y}` placeholders as-is, so ArcGIS Pro displays titiler's styling instead of computing its own.
 
 ## API Endpoints
 
 - `GET /health` — Health check endpoint
 - `POST /qlr` — Generate QLR file from STAC item and XYZ URL
+- `POST /lyrx` — Generate LYRX file from STAC item and XYZ URL
 - `POST /api/v1/notebooks/launch` — Launch a parameterized Jupyter notebook from a template
 
 ## Deployment
@@ -137,9 +162,5 @@ This will return a JSON response with the service status.
 ### Docker (ECS/ECR)
 
 The Docker image is built and pushed via the `publish` job in GitHub Actions on push to main.
-
-### AWS Lambda
-
-The Lambda deployment uses AWS SAM and is triggered via the `publish-to-lambda` workflow on push to `main` or `develop` branches.
 
 ---

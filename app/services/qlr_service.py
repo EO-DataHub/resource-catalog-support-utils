@@ -14,6 +14,7 @@ from ..create_qlr.constants import (
 )
 from ..create_qlr.create_qlr import create_qlr_from_request
 from ..create_qlr.models import QLRRequest
+from ..layer_generation.template_loader import TemplateUnavailableError
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +39,14 @@ class QLRService:
         including validation, processing, and error handling.
 
         Args:
-            request: QLRRequest containing STAC item, XYZ URL, and render ID
+            request: QLRRequest containing STAC item and XYZ URL
 
         Returns:
             QLR XML content as a string
 
         Raises:
             ValueError: If QLR generation fails due to invalid input
-            Exception: For unexpected errors during processing
+            TemplateUnavailableError: If the QLR template file cannot be loaded
         """
         try:
             logger.debug(f"Generating QLR for item: {request.item.id}")
@@ -60,36 +61,13 @@ class QLRService:
             # Re-raise validation errors as-is
             logger.error(f"QLR generation validation error for item {request.item.id}: {e}")
             raise
+        except TemplateUnavailableError:
+            # Re-raise as-is; this is a server-side deployment fault, not a validation error
+            raise
         except Exception as e:
             # Wrap unexpected errors with more context
             logger.error(f"Unexpected error generating QLR for item {request.item.id}: {e}")
             raise ValueError(f"{VALIDATION_MESSAGES['qlr_generation_failed']}: {e!s}") from e
-
-    def validate_request(self, request: QLRRequest) -> bool:
-        """
-        Validate a QLR request before processing.
-
-        Args:
-            request: QLRRequest to validate
-
-        Returns:
-            True if request is valid
-
-        Raises:
-            ValueError: If request is invalid
-        """
-        if not request.item:
-            raise ValueError(VALIDATION_MESSAGES["stac_item_required"])
-
-        if not request.xyzUrl:
-            raise ValueError(VALIDATION_MESSAGES["xyz_url_required"])
-
-        if not request.renderId:
-            raise ValueError(VALIDATION_MESSAGES["render_id_required"])
-
-        # Additional validation can be added here
-        logger.debug(f"Request validation passed for item: {request.item.id}")
-        return True
 
     def get_service_info(self) -> dict[str, Any]:
         """
