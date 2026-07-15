@@ -1,0 +1,53 @@
+{
+  "type": "CIMLayerDocument",
+  "version": "3.7.0",
+  "build": 1901,
+  "layers": [
+    "CIMPATH=Map/${LAYER_ID}.json"
+  ],
+  "layerDefinitions": [
+    {
+      "type": "CIMTiledServiceLayer",
+      "name": "${LAYER_NAME}",
+      "uRI": "CIMPATH=Map/${LAYER_ID}.json",
+      "sourceModifiedTime": {
+        "type": "TimeInstant"
+      },
+      "useSourceMetadata": true,
+      "layerType": "Operational",
+      "showLegends": true,
+      "visibility": true,
+      "displayCacheType": "Permanent",
+      "maxDisplayCacheAge": 5,
+      "showPopups": true,
+      "serviceLayerID": -1,
+      "refreshRate": -1,
+      "refreshRateUnit": "esriTimeUnitsSeconds",
+      "blendingMode": "Alpha",
+      "allowDrapingOnIntegratedMesh": true,
+      "serviceConnection": {
+        "type": "CIMStandardServiceConnection",
+        "serviceType": "1",
+        "url": "${XYZ_URL}"
+      },
+      "transparentColor": {
+        "type": "CIMRGBColor",
+        "values": [
+          0,
+          0,
+          0,
+          100
+        ]
+      },
+      "backgroundColor": {
+        "type": "CIMRGBColor",
+        "values": [
+          0,
+          0,
+          0,
+          100
+        ]
+      }
+    }
+  ]
+}

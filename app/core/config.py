@@ -27,8 +27,8 @@ class APIConfig(BaseModel):
 
     Use cases: Load satellite imagery in QGIS, visualize geospatial data, launch analysis notebooks, integrate with STAC catalogs.
     """
-    contact_name: str = "Resource Catalog Support API"
-    contact_email: str = "support@example.com"
+    contact_name: str = "EODH"
+    contact_email: str = "enquiries@eodatahub.org.uk"
     license_name: str = "MIT License"
     license_url: str = "https://opensource.org/licenses/MIT"
 
@@ -251,11 +251,12 @@ class Constants:
     SERVICE_INFO: ClassVar[dict[str, Any]] = {
         "service": "Resource Catalog Support Utils",
         "version": settings.api.version,
-        "description": "Provides QLR file generation and notebook launch services for STAC-based workflows",
+        "description": "Provides QLR/LYRX file generation and notebook launch services for STAC-based workflows",
         "capabilities": [
             "STAC item processing",
             "XYZ tile URL handling",
             "QLR file generation",
+            "LYRX file generation",
             "Notebook launch and parameterization",
             "Template-based processing",
         ],
@@ -263,10 +264,8 @@ class Constants:
 
     # Validation Messages
     VALIDATION_MESSAGES: ClassVar[dict[str, str]] = {
-        "stac_item_required": "STAC item is required",
-        "xyz_url_required": "XYZ URL is required",
-        "render_id_required": "Render ID is required",
         "qlr_generation_failed": "Failed to generate QLR",
+        "lyrx_generation_failed": "Failed to generate LYRX",
     }
 
     # Error Messages

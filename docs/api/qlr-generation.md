@@ -43,7 +43,6 @@ All fields are **required**.
 |-------|------|-------------|---------|
 | `item` | `object` (STAC Item) | Complete STAC item object containing metadata, geometry, assets, and links. Must conform to STAC specification. | See example below |
 | `xyzUrl` | `string` (URL) | Fully constructed XYZ tile service URL with all render parameters. Must include `{z}`, `{x}`, and `{y}` placeholders for tile coordinates. | `"https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data.tif&bidx=1&bidx=2&bidx=3&resampling=bilinear"` |
-| `renderId` | `string` | Identifier for the render configuration being used (e.g., 'Natural Color', 'NDVI', 'False Color'). Used for metadata purposes. | `"Natural Color"` |
 
 ### STAC Item Structure
 
@@ -102,8 +101,7 @@ The `item` field must be a valid STAC Item object with the following required fi
       }
     }
   },
-  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data/sentinel2-item-001.tif&bidx=1&bidx=2&bidx=3&resampling=bilinear",
-  "renderId": "Natural Color"
+  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data/sentinel2-item-001.tif&bidx=1&bidx=2&bidx=3&resampling=bilinear"
 }
 ```
 
@@ -133,8 +131,7 @@ The `item` field must be a valid STAC Item object with the following required fi
     "links": [],
     "assets": {}
   },
-  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data/landsat.tif&bidx=4&bidx=3&bidx=2&colormap_name=viridis&rescale=0,10000",
-  "renderId": "NDVI"
+  "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data/landsat.tif&bidx=4&bidx=3&bidx=2&colormap_name=viridis&rescale=0,10000"
 }
 ```
 
@@ -191,7 +188,6 @@ The response body is a QLR XML file that can be saved and opened directly in QGI
 | `"xyzUrl cannot be empty"` | `xyzUrl` field is missing or empty |
 | `"xyzUrl must be a valid HTTP/HTTPS URL"` | URL doesn't start with `http://` or `https://` |
 | `"xyzUrl must contain {z}, {x}, and {y} placeholders for tile coordinates"` | URL missing required tile coordinate placeholders |
-| `"renderId cannot be empty or whitespace-only"` | `renderId` field is missing or empty |
 | `"STAC item is required"` | `item` field is missing |
 | `"STAC item validation failed: ..."` | STAC item doesn't conform to specification |
 
@@ -233,7 +229,6 @@ const response = await fetch(`${apiBaseUrl}/api/v1/qlr`, {
   body: JSON.stringify({
     item: stacItem,
     xyzUrl: xyzUrl,
-    renderId: renderConfig.name,
   }),
 });
 
@@ -321,8 +316,7 @@ curl -X POST "https://api.example.com/api/v1/qlr" \
       "links": [],
       "assets": {}
     },
-    "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data.tif&bidx=1&bidx=2&bidx=3",
-    "renderId": "Natural Color"
+    "xyzUrl": "https://titiler.example.com/tiles/{z}/{x}/{y}?url=https://example.com/data.tif&bidx=1&bidx=2&bidx=3"
   }'
 ```
 
@@ -382,7 +376,6 @@ The API uses a single generic XML template for all data types. All render parame
 | `400` | `"xyzUrl cannot be empty"` | `xyzUrl` field is missing or empty | Request body missing `xyzUrl` or empty string |
 | `400` | `"xyzUrl must be a valid HTTP/HTTPS URL"` | URL doesn't start with `http://` or `https://` | Invalid URL format |
 | `400` | `"xyzUrl must contain {z}, {x}, and {y} placeholders for tile coordinates"` | URL missing required tile coordinate placeholders | URL doesn't include `{z}`, `{x}`, `{y}` |
-| `400` | `"renderId cannot be empty or whitespace-only"` | `renderId` field is missing or empty | Request body missing `renderId` or whitespace-only |
 | `400` | `"STAC item is required"` | `item` field is missing | Request body missing `item` |
 | `400` | `"STAC item validation failed: ..."` | STAC item doesn't conform to specification | Missing required STAC fields or invalid structure |
 | `500` | `"Internal server error"` | Unexpected server error | Template loading failure, XML generation error, or unhandled exception |
