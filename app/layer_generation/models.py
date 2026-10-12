@@ -20,13 +20,13 @@ class STACAsset(BaseModel):
         href: URL or path to the asset
         roles: List of roles this asset serves (e.g., 'data', 'thumbnail')
         size: Size of the asset in bytes
-        location: Geographic location of the asset
+        location: Storage location(s) of the asset (e.g. 'on_disk' or ['on_disk'])
     """
 
     href: str
     roles: list[str] | None = []
     size: int | None = None
-    location: str | None = None
+    location: str | list[str] | None = None
 
 
 class STACLink(BaseModel):
