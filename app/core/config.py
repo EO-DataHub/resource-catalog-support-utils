@@ -29,8 +29,8 @@ class APIConfig(BaseModel):
     """
     contact_name: str = "EODH"
     contact_email: str = "enquiries@eodatahub.org.uk"
-    license_name: str = "MIT License"
-    license_url: str = "https://opensource.org/licenses/MIT"
+    license_name: str = "BSD 3-Clause License"
+    license_url: str = "https://opensource.org/licenses/BSD-3-Clause"
 
 
 class CORSConfig(BaseModel):
