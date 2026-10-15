@@ -10,6 +10,7 @@ import logging
 from fastapi import FastAPI
 
 from .api.routes import setup_routes
+from .core.auth import AuthError, auth_error_handler, check_auth_configured
 from .core.config import settings
 from .core.middleware import setup_middleware
 
@@ -26,6 +27,8 @@ def create_app() -> FastAPI:
     Returns:
         Configured FastAPI application instance
     """
+    check_auth_configured()
+
     # Create FastAPI application
     app = FastAPI(**settings.get_fastapi_config())
 
@@ -34,6 +37,7 @@ def create_app() -> FastAPI:
 
     # Set up routes
     setup_routes(app)
+    app.add_exception_handler(AuthError, auth_error_handler)
 
     logger.info("FastAPI application created and configured successfully")
     return app
@@ -49,6 +53,8 @@ def create_app_with_config(**kwargs: str) -> FastAPI:
     Returns:
         Configured FastAPI application instance
     """
+    check_auth_configured()
+
     # Default configuration
     default_config = settings.get_fastapi_config()
 
@@ -63,6 +69,7 @@ def create_app_with_config(**kwargs: str) -> FastAPI:
 
     # Set up routes
     setup_routes(app)
+    app.add_exception_handler(AuthError, auth_error_handler)
 
     logger.info("FastAPI application created with custom configuration")
     return app

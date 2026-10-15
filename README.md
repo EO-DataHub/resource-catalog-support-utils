@@ -44,8 +44,10 @@ This project provides a FastAPI web service that supports resource catalog opera
 ### Start the FastAPI App
 
 ```bash
-uv run uvicorn app.main:app --reload
+KEYCLOAK_BASE_URL=https://test.eodatahub.org.uk uv run uvicorn app.main:app --reload
 ```
+
+- `KEYCLOAK_BASE_URL` is required (see [Configuration](#configuration)).
 
 - By default, this will start the API at `http://127.0.0.1:8000`.
 - The `app.main:app` syntax tells uvicorn to import the `app` object from the `app.main` module.
@@ -155,7 +157,16 @@ This will return a JSON response with the service status.
 - `GET /health` — Health check endpoint
 - `POST /qlr` — Generate QLR file from STAC item and XYZ URL
 - `POST /lyrx` — Generate LYRX file from STAC item and XYZ URL
-- `POST /api/v1/notebooks/launch` — Launch a parameterized Jupyter notebook from a template
+- `POST /api/v1/notebooks/launch` — Launch a parameterized Jupyter notebook from a template. Needs a platform JWT (`Authorization: Bearer <token>`); `username` must match the token's `preferred_username`, and `workspace_name` must be in its `workspaces`, `workspaces-admin` or `workspaces-owned` claim. Returns 401 for a missing or invalid token, 403 when the user or workspace doesn't match, and 503 if Keycloak's signing keys can't be fetched. `action_name` may contain only letters, digits, `.`, `_` and `-` (at most 64 characters).
+
+## Configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `KEYCLOAK_BASE_URL` | Platform base URL that serves Keycloak (e.g. `https://eodatahub.org.uk`). Required: the service will not start without it. Tokens must be issued by `<base>/keycloak/realms/<realm>` and are verified against that realm's `/protocol/openid-connect/certs` keys |
+| `KEYCLOAK_REALM` | Keycloak realm. Default `eodhp` |
+| `NOTEBOOK_S3_BUCKET` | Workspace bucket that notebooks are written to |
+| `JUPYTERHUB_BASE_URL` | JupyterHub URL used to build spawn links |
 
 ## Deployment
 

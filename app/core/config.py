@@ -95,6 +95,13 @@ class Settings(BaseSettings):
         description="S3 bucket for workspace notebooks",
     )
 
+    # Keycloak, used to verify the caller's JWT on notebook launches
+    keycloak_base_url: str | None = Field(
+        default=None,
+        description="Platform base URL that serves Keycloak, e.g. https://eodatahub.org.uk",
+    )
+    keycloak_realm: str = Field(default="eodhp", description="Keycloak realm that issues platform tokens")
+
     # Environment
     environment: str = Field(default="dev", description="Deployment environment")
 
@@ -122,6 +129,20 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+
+    @property
+    def keycloak_issuer(self) -> str | None:
+        """The `iss` claim on platform tokens, or None when Keycloak is not configured."""
+        if not self.keycloak_base_url:
+            return None
+        base = self.keycloak_base_url.rstrip("/")
+        return f"{base}/keycloak/realms/{self.keycloak_realm}"
+
+    @property
+    def keycloak_certs_url(self) -> str | None:
+        """Keycloak JWKS endpoint, or None when Keycloak is not configured."""
+        issuer = self.keycloak_issuer
+        return f"{issuer}/protocol/openid-connect/certs" if issuer else None
 
     @validator("cors", always=True)
     def update_cors_origins(cls, v: CORSConfig, values: dict[str, Any]) -> CORSConfig:

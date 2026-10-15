@@ -1,6 +1,8 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app.api.v1 import notebooks
+from app.core.auth import get_token_claims
 from app.main import app
 from app.services.notebook_launch_service import (
     NotebookLaunchResult,
@@ -8,6 +10,17 @@ from app.services.notebook_launch_service import (
 )
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _signed_in_as_workspace_member():
+    """These tests cover the launch itself; tests/core/test_auth.py covers token checks."""
+    app.dependency_overrides[get_token_claims] = lambda: {
+        "preferred_username": "geodowd",
+        "workspaces": ["sparkgeotest"],
+    }
+    yield
+    app.dependency_overrides.pop(get_token_claims, None)
 
 
 class _FakeLaunchServiceSuccess:
@@ -175,5 +188,25 @@ def test_launch_notebook_without_variables():
     data = response.json()
     assert data["servername"] == "ndvi_123456"
     assert data["notebook_path"] == "jupyter/ndvi_123456.ipynb"
+
+    app.dependency_overrides.pop(notebooks.get_notebook_launch_service, None)
+
+
+@pytest.mark.parametrize(
+    "action_name",
+    ["../other-workspace/x", "ndvi?workspace=other", "ndvi&next=https://evil.example", "a/b", ".hidden", "", "a" * 65],
+)
+def test_launch_notebook_rejects_unsafe_action_name(action_name):
+    app.dependency_overrides[notebooks.get_notebook_launch_service] = _override_service_success
+
+    payload = {
+        "workspace_name": "sparkgeotest",
+        "username": "geodowd",
+        "action_name": action_name,
+        "template_url": "https://example.com/templates/ndvi.ipynb",
+    }
+
+    response = client.post("/api/v1/notebooks/launch", json=payload)
+    assert response.status_code == 422
 
     app.dependency_overrides.pop(notebooks.get_notebook_launch_service, None)

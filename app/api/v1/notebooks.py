@@ -9,8 +9,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
-from pydantic import AnyHttpUrl, BaseModel
+from pydantic import AnyHttpUrl, BaseModel, Field
 
+from app.core.auth import TokenClaims, authorize_workspace_user
 from app.services.notebook_launch_service import (
     NotebookLaunchResult,
     NotebookLaunchService,
@@ -29,7 +30,8 @@ class NotebookLaunchRequest(BaseModel):
 
     workspace_name: str
     username: str
-    action_name: str
+    # Goes into the S3 key and the spawn URL, so keep it to characters that are safe in both.
+    action_name: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
     template_url: AnyHttpUrl
     variables: dict[str, str] | None = None  # Optional template variables: key -> {{KEY}} placeholder value
 
@@ -62,16 +64,24 @@ ServiceDep = Annotated[NotebookLaunchService, Depends(get_notebook_launch_servic
     response_model=NotebookLaunchSuccess,
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": ErrorResponse},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse},
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ErrorResponse},
     },
 )
 async def launch_notebook(
     payload: NotebookLaunchRequest,
+    claims: TokenClaims,
     service: ServiceDep,
 ) -> JSONResponse | NotebookLaunchSuccess:
     """
     Launch a parameterized notebook from a template and return spawn details.
+
+    The caller must be the named user and a member of the named workspace, because the
+    notebook is written into that workspace's storage.
     """
+    authorize_workspace_user(claims, workspace_name=payload.workspace_name, username=payload.username)
     try:
         result: NotebookLaunchResult = service.launch_notebook(
             workspace_name=payload.workspace_name,
