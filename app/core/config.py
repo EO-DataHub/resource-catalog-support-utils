@@ -39,12 +39,18 @@ class CORSConfig(BaseModel):
     allowed_origins: list[str] = Field(
         default_factory=lambda: [
             "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
+            "http://127.0.0.1:5175",
             "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:5175",
             "https://eodatahub.org.uk",
             "https://test.eodatahub.org.uk",
-            "https://eodhrc.sparkgeo.dev",
-            "https://develop.eodhrc.sparkgeo.dev",
             "https://staging.eodatahub.org.uk",
+            # RC UI develop build
+            "https://eodhrc.eodatahub.org.uk",
+            # Frontend PR previews (EO-DataHub/eodhp-frontend-previews)
+            "https://preview.eodatahub.org.uk",
             "https://netlify.eodh.sparkgeo.dev",
         ],
         description="List of allowed CORS origins",
